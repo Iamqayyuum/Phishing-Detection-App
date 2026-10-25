@@ -43,6 +43,30 @@
                 </div>
             </section>
 
+            <!-- 3-Level Risk Scoring Framework -->
+            <section class="result-card" style="margin-top: -10px;">
+                <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
+                    <h3 style="color: var(--neon); font-size: 1.5em; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">3-Level Risk Scoring Framework</h3>
+                    <p style="color: var(--text); line-height: 1.6; font-size: 1.1em; margin-bottom: 20px;">
+                        To translate complex mathematical probability and threat feeds into actionable decisions, the platform categorizes every scanned URL into one of three distinct risk tiers:
+                    </p>
+                    <div class="intel-grid">
+                        <div class="intel-card" style="border-left: 4px solid #00ff66;">
+                            <div class="intel-header"><strong>Safe / Low Risk</strong></div>
+                            <p class="intel-detail">Indicates standard URL syntax, benign structural features, and verified clean status across global security feeds. Safe to proceed.</p>
+                        </div>
+                        <div class="intel-card" style="border-left: 4px solid #ffaa00;">
+                            <div class="intel-header"><strong>Suspicious</strong></div>
+                            <p class="intel-detail">Triggered when anomalous lexical indicators (e.g., unusual subdomains, sensitive keywords) or mixed signals are detected. Proceed with caution.</p>
+                        </div>
+                        <div class="intel-card" style="border-left: 4px solid #ff003c;">
+                            <div class="intel-header"><strong>Malicious / High Risk</strong></div>
+                            <p class="intel-detail">Fired when active threat intelligence matches blacklists or machine learning models confirm high probability of a credential harvesting attack. Blocked immediately.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Why Hybrid Detection Matters -->
             <section class="result-card" style="margin-top: -10px;">
                 <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
