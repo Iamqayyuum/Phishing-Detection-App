@@ -191,18 +191,10 @@ def export_to_server():
 # ==========================================
 @app.route("/", methods=["GET"])
 def home():
-    # Calculate real-time stats from database
-    if current_user.is_authenticated:
-        total_scans = ScanHistory.query.filter_by(user_id=current_user.id).count()
-        threats_detected = ScanHistory.query.filter(
-            ScanHistory.user_id == current_user.id,
-            ScanHistory.status.in_(['Malicious', 'High Risk'])
-        ).count()
-    else:
-        total_scans = ScanHistory.query.count()
-        threats_detected = ScanHistory.query.filter(ScanHistory.status.in_(['Malicious', 'High Risk'])).count()
+    # Global system metrics (counts all scans across the database)
+    total_scans = ScanHistory.query.count()
+    threats_detected = ScanHistory.query.filter(ScanHistory.status.in_(['Malicious', 'High Risk'])).count()
 
-    # Dynamic system health status checks
     ml_status = "LOADED" if model_pipeline else "OFFLINE"
     api_gateway_status = "ONLINE"
     openphish_status = "ACTIVE" if openphish_engine else "STANDBY"
@@ -250,18 +242,6 @@ def analyze():
     if parsed_domain in TRUSTED_DOMAINS:
         intel_results = query_threat_intelligence(target_url)
         
-        result = {
-            "risk_score": 0.0,
-            "risk_category": "Safe",
-            "intel_results": [res.__dict__ for res in intel_results],
-            "url": target_url,
-            "findings": [
-                "Domain matched against the Enterprise Trusted Whitelist.",
-                "Bypassed Machine Learning and Heuristics to prevent false positives."
-            ],
-            "recommendations": ["This is a globally trusted and verified domain. Safe to browse."]
-        }
-        
         if current_user.is_authenticated:
             new_scan = ScanHistory(
                 url_scanned=target_url,
@@ -272,6 +252,22 @@ def analyze():
             db.session.add(new_scan)
             db.session.commit()
             
+        total_scans = ScanHistory.query.count()
+        threats_detected = ScanHistory.query.filter(ScanHistory.status.in_(['Malicious', 'High Risk'])).count()
+        
+        result = {
+            "risk_score": 0.0,
+            "risk_category": "Safe",
+            "intel_results": [res.__dict__ for res in intel_results],
+            "url": target_url,
+            "findings": [
+                "Domain matched against the Enterprise Trusted Whitelist.",
+                "Bypassed Machine Learning and Heuristics to prevent false positives."
+            ],
+            "recommendations": ["This is a globally trusted and verified domain. Safe to browse."],
+            "total_scans": total_scans,
+            "threats_detected": threats_detected
+        }
         return jsonify(result)
 
     if not is_valid_url(target_url):
@@ -306,6 +302,12 @@ def analyze():
             )
             db.session.add(new_scan)
             db.session.commit()
+
+        total_scans = ScanHistory.query.count()
+        threats_detected = ScanHistory.query.filter(ScanHistory.status.in_(['Malicious', 'High Risk'])).count()
+
+        result["total_scans"] = total_scans
+        result["threats_detected"] = threats_detected
 
         return jsonify(result)
 
