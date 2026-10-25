@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="header">
+        <h1>Phishing URL Risk Analyzer</h1>
+        <p class="subtitle">Detect suspicious links using ML, Heuristics, and Threat Intelligence.</p>
+    </div>
+
+    <div class="main-layout">
+        <div class="content-area">
+            
+            <section class="input-card">
+                <form id="analyze-form" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                    <input type="text" id="url-input" placeholder="Enter a website URL..." required autocomplete="off" style="width: 100%;">
+                    
+                    <button type="submit" id="analyze-btn">
+                        <span id="btn-text">Analyze URL</span>
+                        <div id="spinner" class="spinner hidden"></div>
+                    </button>
+                </form>
+            </section>
+
+            <section id="result-card" class="result-card hidden">
+                <div class="risk-indicator">
+                    <span id="risk-category" class="risk-label"></span>
+                    <span id="risk-score"></span>
+                </div>
+
+                <div class="risk-bar-container">
+                    <div id="risk-bar"></div>
+                </div>
+
+                <div class="intel-section">
+                    <h3>Threat Intelligence Status</h3>
+                    <div id="intel-grid" class="intel-grid"></div>
+                </div>
+
+                <div class="reasons">
+                    <h3>Findings</h3>
+                    <ul id="reason-list"></ul>
+                </div>
+
+                <div class="recommendation">
+                    <h3>Recommended Action</h3>
+                <div id="recommendation-text" class="text-content"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+    const analyzeForm = document.getElementById("analyze-form");
+    const urlInput = document.getElementById("url-input");
+    const analyzeBtn = document.getElementById("analyze-btn");
+    const btnText = document.getElementById("btn-text");
+    const spinner = document.getElementById("spinner");
+
+    function categoryToClass(category) {
+        const c = (category || "").toLowerCase().trim();
+        if (c === "low risk") return "low-risk";
+        if (c === "suspicious") return "medium-risk";
+        if (c === "high risk") return "high-risk";
+        return "medium-risk"; 
+    }
+
+    function setRiskBarClass(category) {
+        const bar = document.getElementById("risk-bar");
+        bar.classList.remove("bar-low", "bar-medium", "bar-high");
+        const c = (category || "").toLowerCase().trim();
+        if (c === "low risk") bar.classList.add("bar-low");
+        else if (c === "high risk") bar.classList.add("bar-high");
+        else bar.classList.add("bar-medium");
+    }
+
+    analyzeForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const url = urlInput.value.trim();
+
+        const urlRegex = /^(https?:\/\/)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:[0-9]{1,3}\.){3}[0-9]{1,3})(:[0-9]+)?(\/.*)?$/;
+        if (!urlRegex.test(url)) {
+            alert("Invalid format!");
+            return;
+        }
+
+        analyzeBtn.disabled = true;
+        btnText.classList.add("hidden");
+        spinner.classList.remove("hidden");
+
+        try {
+            const formData = new FormData();
+            formData.append("url", url);
+            const resp = await fetch("/analyze", { method: "POST", body: formData });
+            const data = await resp.json();
+
+            if (data.error) { alert(data.error); return; }
+
+            document.getElementById("result-card").classList.remove("hidden");
+            document.getElementById("risk-score").innerText = `Score: ${data.risk_score}/100`;
+            document.getElementById("risk-bar").style.width = data.risk_score + "%";
+            document.getElementById("risk-category").innerText = data.risk_category;
+            document.getElementById("risk-category").className = "risk-label " + categoryToClass(data.risk_category);
+            setRiskBarClass(data.risk_category);
+
+            // Render Threat Intel Grid
+            const grid = document.getElementById("intel-grid");
+            grid.innerHTML = ""; 
+            if (data.intel_results && Array.isArray(data.intel_results) && data.intel_results.length > 0) {
+                grid.innerHTML = data.intel_results.map(intel => `
+                    <div class="intel-card ${intel.verdict ? intel.verdict.toLowerCase() : 'neutral'}">
+                        <div class="intel-header">
+                            <strong>${intel.source || 'Unknown'}</strong>
+                            <span class="badge">${intel.verdict ? intel.verdict.toUpperCase() : 'N/A'}</span>
+                        </div>
+                        <p class="intel-detail">${intel.detail || 'No details provided.'}</p>
+                    </div>
+                `).join('');
+            } else {
+                grid.innerHTML = '<p style="color:#8b949e; font-size:0.8em; padding: 10px;">No external intelligence data available.</p>';
+            }
+
+            // Render Findings List with 3-color theme mapping
+            const reasonList = document.getElementById("reason-list");
+            reasonList.innerHTML = (data.reasons || []).map(r => {
+                let cssClass = "finding-item";
+                
+                // Assigning to your 3-color scheme (Red/Orange/Blue)
+                if (r.includes("CRITICAL OVERRIDE")) cssClass += " critical"; 
+                else if (r.includes("Threat Intelligence")) cssClass += " threat"; 
+                else cssClass += " low"; 
+                
+                let parts = r.includes(":") ? r.split(":", 2) : ["Finding", r];
+                return `<li class="${cssClass}"><strong>${parts[0]}:</strong> ${parts[1]}</li>`;
+            }).join('');
+
+            // Render Recommendations cleanly (Handles both Arrays and Strings)
+            const recContainer = document.getElementById("recommendation-text");
+            const recData = data.recommendations || data.recommendation || "";
+            
+            if (Array.isArray(recData)) {
+                // If it's a list, format it with bullet points and spacing
+                recContainer.innerHTML = `<ul style="list-style-type: disc; padding-left: 20px; margin-top: 10px;">` + 
+                    recData.map(item => {
+                        // Bold the label (e.g., "Immediate Action:") if a colon exists
+                        let parts = item.split(":");
+                        if (parts.length > 1) {
+                            return `<li style="margin-bottom: 10px;"><strong>${parts[0]}:</strong>${parts.slice(1).join(":")}</li>`;
+                        }
+                        return `<li style="margin-bottom: 10px;">${item}</li>`;
+                    }).join('') + `</ul>`;
+            } else {
+                // If it's a single standard sentence, just display it normally
+                recContainer.innerText = recData;
+            }
+
+        } catch (err) { 
+            console.error(err);
+            alert("Analysis failed."); 
+        } finally { 
+            analyzeBtn.disabled = false; 
+            btnText.classList.remove("hidden"); 
+            spinner.classList.add("hidden"); 
+        }
+    };
+    </script>
+{% endblock %}

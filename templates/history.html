@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="main-layout" style="width: 100%; display: flex; justify-content: center;">
+    <div class="content-area" style="width: 100%; max-width: 1200px;">
+        <div class="history-card">
+            
+            <div class="history-header">
+                <h1><span style="color:var(--text);">User:</span> {{ current_user.username }}'s Scan History</h1>
+                
+                <div class="action-buttons">
+                    {% if scans %}
+                        <button id="export-csv-client-btn" class="btn-export-csv" style="cursor: pointer;">Download CSV</button>
+                        
+                        <button id="export-csv-server-btn" class="btn-outline" style="cursor: pointer;">Save to Project Folder</button>
+
+                        <form action="/clear_history" method="POST" style="margin: 0;">
+                            <button type="submit" class="btn-danger" style="cursor: pointer;" onclick="return confirm('Are you sure you want to permanently delete all your scan history?');">Clear All</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if scans %}
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>{{ total }}</h3>
+                    <p>Total URLs Scanned</p>
+                </div>
+                <div class="stat-card safe">
+                    <h3>{{ safe }}</h3>
+                    <p>Safe Links</p>
+                </div>
+                <div class="stat-card malicious">
+                    <h3>{{ malicious }}</h3>
+                    <p>Threats Caught</p>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Scan ID</th>
+                        <th>Target URL</th>
+                        <th>Risk Score</th>
+                        <th>Final Verdict</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in scans %}
+                    <tr>
+                        <td style="color: var(--text); opacity: 0.6;">#{{ scans|length - loop.index0 }}</td>
+                        <td>{{ scan.url_scanned }}</td>
+                        <td class="score">{{ scan.risk_score | round(2) }}</td>
+                        <td>
+                            {% if 'low' in scan.status.lower() or 'safe' in scan.status.lower() %}
+                                <span class="badge badge-low">{{ scan.status }}</span>
+                            {% elif 'suspicious' in scan.status.lower() %}
+                                <span class="badge badge-medium">{{ scan.status }}</span>
+                            {% else %}
+                                <span class="badge badge-high">{{ scan.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form action="/delete_scan/{{ scan.id }}" method="POST" style="margin: 0;">
+                                <button type="submit" class="btn-delete" onclick="return confirm('Delete this scan from your history?');">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <h3>No records found.</h3>
+                <p>You haven't scanned any URLs yet. Head back to the dashboard to run your first analysis.</p>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // OPTION 1: CLIENT-SIDE DOWNLOAD (PROMPT USER)
+    // ==========================================
+    const clientCsvBtn = document.getElementById("export-csv-client-btn");
+    if (clientCsvBtn) {
+        clientCsvBtn.addEventListener("click", function() {
+            let rows = document.querySelectorAll("table tr");
+            let csvContent = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                let row = [];
+                let cols = rows[i].querySelectorAll("td, th");
+
+                // Skip the last column ('Action') so we don't export the Delete buttons
+                for (let j = 0; j < cols.length - 1; j++) {
+                    let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, "").trim();
+                    row.push('"' + data + '"');
+                }
+                csvContent.push(row.join(","));
+            }
+
+            let csvString = csvContent.join("\n");
+            let blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+            
+            // This creates a temporary link to prompt the browser download window
+            let link = document.createElement("a");
+            let url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Threat_Scan_History_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = "hidden";
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    // ==========================================
+    // OPTION 2: SERVER-SIDE SAVE (ROOT DIRECTORY)
+    // ==========================================
+    const serverCsvBtn = document.getElementById("export-csv-server-btn");
+    if (serverCsvBtn) {
+        serverCsvBtn.addEventListener("click", async () => {
+            const btn = document.getElementById("export-csv-server-btn");
+            const originalText = btn.innerText;
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+            
+            try {
+                // Sends a silent request to the backend route we added in app.py
+                const response = await fetch("/export_to_server", { method: "POST" });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert("✅ Successfully saved to the server's root directory as:\n" + result.filename);
+                } else {
+                    alert("❌ Error saving to server: " + result.error);
+                }
+            } catch (err) {
+                alert("❌ Failed to communicate with the server. Ensure the backend is running.");
+            } finally {
+                // Reset the button state
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+    }
+</script>
+{% endblock %}

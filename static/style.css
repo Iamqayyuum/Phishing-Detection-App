@@ -1,0 +1,656 @@
+
+:root {
+    --bg: #F8FAFC;       /* Color 1: Bright Slate (Background) */
+    --text: #0F172A;     /* Color 2: Deep Ink (Text, borders, headers) */
+    --accent: #0284C7;   /* Color 3: Tech Blue (Buttons, highlights, safe indicators) */
+    
+    /* We use the Deep Ink color with lowered opacity to create soft shadows 
+       without breaking the 3-color limitation rule. */
+    --shadow-light: rgba(15, 23, 42, 0.05); 
+    --border-light: rgba(15, 23, 42, 0.15);
+}
+
+/* * 2. GLOBAL RESET & TYPOGRAPHY
+ * Ensures consistent sizing and fonts across all browsers.
+ */
+* { 
+    box-sizing: border-box; 
+    font-family: "Segoe UI", sans-serif; 
+}
+
+html, body { 
+    height: 100%; 
+    margin: 0; 
+    padding: 0; 
+    overflow-y: auto; /* Allows scrolling when history tables get long */
+}
+
+body { 
+    background-color: var(--bg); 
+    color: var(--text); 
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* * 3. ENTERPRISE WATERMARK
+ * Anchors the SVG logo perfectly in the center of the screen, floating 
+ * behind all other elements at a highly transparent 3% opacity.
+ */
+body::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50vw;
+    max-width: 600px;
+    height: 50vh;
+    max-height: 600px;
+    background-image: url('logo.svg'); 
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.03; 
+    z-index: -1; 
+    pointer-events: none; /* Prevents the logo from blocking mouse clicks */
+}
+
+/* ==========================================================================
+   NAVIGATION BAR
+   ========================================================================== */
+/* Targets both auth-nav and navbar depending on what your HTML uses */
+.auth-nav, .navbar {
+    display: flex;
+    justify-content: flex-end; 
+    align-items: center;
+    padding: 15px 30px;
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border-light);
+    gap: 15px; 
+}
+
+/* Styles the "Welcome, username" text */
+.auth-nav span {
+    color: var(--text);
+    font-weight: bold;
+    font-size: 14px;
+    margin-right: auto; /* Pushes the welcome text to the left, buttons to the right */
+}
+
+/* Base styling for all navigation buttons */
+.btn-outline, .btn-primary, .btn-danger {
+    text-decoration: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    border: 2px solid;
+}
+
+/* 1. Hollow Blue Button (Login, History, Scanner) */
+.btn-outline {
+    color: var(--accent);
+    border-color: var(--accent);
+    background-color: transparent;
+}
+.btn-outline:hover {
+    background-color: var(--accent);
+    color: var(--bg);
+}
+
+/* 2. Solid Blue Button (Create Account) */
+.btn-primary {
+    background-color: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
+.btn-primary:hover {
+    background-color: var(--text);
+    border-color: var(--text);
+}
+
+/* 3. Red Warning Button (Logout) */
+.btn-danger {
+    color: #EF4444;
+    border-color: #EF4444;
+    background-color: transparent;
+}
+.btn-danger:hover {
+    background-color: #EF4444;
+    color: #ffffff;
+}
+
+/* ==========================================
+   USER PROFILE AVATAR
+   ========================================== */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-right: auto; 
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    background-color: var(--accent);
+    color: var(--bg);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    
+    font-family: inherit; 
+    font-weight: 700; 
+    font-size: 14px;
+}
+
+.greeting { 
+    color: var(--text); 
+    
+    font-family: inherit; 
+    font-size: 15px; 
+    font-weight: 500; 
+}
+
+.greeting strong {
+    font-weight: 700; 
+}
+
+/* ==========================================================================
+   LAYOUT CONTAINERS & HEADERS
+   ========================================================================== */
+.container { 
+    max-width: 1400px; 
+    width: 100%;
+    margin: auto; 
+    padding: 40px 30px; 
+    display: flex; 
+    flex-direction: column; 
+    flex-grow: 1;
+}
+
+.header { 
+    text-align: center; 
+    margin-bottom: 30px; 
+    flex-shrink: 0; 
+}
+
+.header h1 { 
+    color: var(--accent); 
+    font-size: 2.2em; 
+    margin: 0; 
+    font-weight: 800;
+}
+
+.subtitle { 
+    color: var(--text); 
+    opacity: 0.7; /* Softens the text without introducing a grey color */
+    margin-top: 5px; 
+    font-size: 0.9em; 
+    font-weight: 600;
+}
+
+.main-layout { 
+    display: flex; 
+    gap: 25px; 
+    align-items: stretch; 
+    flex: 1; 
+    justify-content: center;
+}
+
+.content-area { 
+    width: 100%;
+    max-width: 800px;
+    display: flex; 
+    flex-direction: column; 
+}
+
+/* * UI Cards 
+ * Used for the Scanner, Login, Signup, and History sections.
+ * Features a soft drop-shadow to separate it from the background watermark.
+ */
+.input-card, .result-card, .history-card { 
+    background-color: var(--bg); 
+    border-radius: 12px; 
+    padding: 30px; 
+    border: 1px solid var(--border-light); 
+    box-shadow: 0 10px 15px -3px var(--shadow-light), 0 4px 6px -2px var(--shadow-light);
+    margin-bottom: 25px;
+}
+
+/* ==========================================================================
+   FORMS, INPUTS & BUTTONS
+   ========================================================================== */
+input[type="text"], input[type="password"] { 
+    width: 100%; 
+    padding: 14px; 
+    border-radius: 8px; 
+    border: 1px solid var(--border-light); 
+    background-color: var(--bg); 
+    color: var(--text); 
+    margin-bottom: 20px; 
+    font-size: 1em; 
+    font-weight: 600;
+    outline: none;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 2px 4px var(--shadow-light);
+}
+
+/* Adds a tech-blue glow when the user clicks inside the input box */
+input[type="text"]:focus, input[type="password"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); 
+}
+
+#analyze-btn { 
+    width: 100%; 
+    padding: 14px; 
+    background-color: var(--accent); 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 1.05em;
+    font-weight: bold; 
+    cursor: pointer; 
+    color: var(--bg); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 50px; 
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(2, 132, 199, 0.2); 
+}
+
+/* Lifts the button slightly when hovered */
+#analyze-btn:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 12px rgba(2, 132, 199, 0.3);
+}
+
+#analyze-btn:disabled { 
+    opacity: 0.6; 
+    cursor: not-allowed; 
+    transform: none;
+    box-shadow: none;
+}
+
+/* --- PASSWORD VISIBILITY TOGGLE --- */
+.password-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px; /* Moves the bottom spacing to the wrapper */
+}
+
+.password-container input[type="password"],
+.password-container input[type="text"] {
+    margin-bottom: 0; /* Removes default margin so it doesn't double up */
+    padding-right: 45px; /* Makes room for the eye icon so text doesn't hide behind it */
+}
+
+.eye-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text);
+    opacity: 0.5;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+}
+
+.eye-btn:hover {
+    opacity: 1; /* Brightens up when hovered */
+}
+
+.eye-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ==========================================================================
+   SCANNER DASHBOARD & INTELLIGENCE CARDS
+   ========================================================================== */
+.risk-indicator { 
+    display: flex; 
+    justify-content: space-between; 
+    font-size: 1.2em; 
+    margin-bottom: 10px; 
+    font-weight: bold;
+}
+
+.risk-label { 
+    padding: 4px 10px; 
+    border-radius: 6px; 
+    border: 2px solid;
+}
+
+.risk-bar-container { 
+    width: 100%; 
+    height: 12px; 
+    background-color: var(--bg); 
+    border: 1px solid var(--border-light); 
+    border-radius: 6px; 
+    margin: 10px 0 20px 0; 
+    overflow: hidden; 
+}
+
+/* The loading animation width transition */
+#risk-bar { 
+    height: 100%; 
+    width: 0%; 
+    transition: width 0.6s ease, background-color 0.4s ease;
+}
+
+.intel-section, .reasons, .recommendation { 
+    margin-top: 20px; 
+    padding-top: 15px; 
+    border-top: 1px dashed var(--border-light); 
+}
+
+.intel-section h3, .reasons h3, .recommendation h3 { 
+    margin: 0 0 10px 0; 
+    font-size: 1.1em; 
+    color: var(--accent); 
+}
+
+.intel-grid { 
+    display: flex; 
+    gap: 15px; 
+    margin-top: 10px; 
+    flex-wrap: wrap; 
+}
+
+.intel-card { 
+    flex: 1; 
+    min-width: 180px; 
+    background-color: var(--bg); 
+    padding: 12px; 
+    border-radius: 8px; 
+    border: 1px solid var(--border-light); 
+    transition: transform 0.2s ease;
+}
+
+.intel-card:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 6px var(--shadow-light); 
+}
+
+.intel-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 5px; 
+}
+
+.intel-detail { 
+    font-size: 0.85rem; 
+    color: var(--text); 
+    margin: 0; 
+    line-height: 1.4; 
+    font-weight: 600; 
+}
+
+.reasons ul { 
+    padding-left: 20px; 
+    color: var(--text); 
+    font-size: 0.95em; 
+    font-weight: 500; 
+    margin: 0; 
+}
+
+.reasons li { margin-bottom: 6px; }
+
+#recommendation-text { 
+    color: var(--text); 
+    font-size: 0.95em; 
+    font-weight: bold; 
+    margin: 0; 
+    line-height: 1.5; 
+}
+
+/* ==========================================================================
+   SEMANTIC RISK COLORS (Exceptions to the 3-color rule for safety alerts)
+   Green = Safe, Yellow = Suspicious, Red = Malicious
+   ========================================================================== */
+.low-risk { color: #10B981; border-color: #10B981; background-color: rgba(16, 185, 129, 0.1); }
+.medium-risk { color: #F59E0B; border-color: #F59E0B; background-color: rgba(245, 158, 11, 0.1); }
+.high-risk { color: #EF4444; border-color: #EF4444; background-color: rgba(239, 68, 68, 0.1); }
+
+#risk-bar.bar-low { background-color: #10B981; }
+#risk-bar.bar-medium { background-color: #F59E0B; }
+#risk-bar.bar-high { background-color: #EF4444; }
+
+.intel-card.clean { border-left: 6px solid #10B981; }
+.intel-card.suspicious { border-left: 6px solid #F59E0B; }
+.intel-card.malicious { border-left: 6px solid #EF4444; }
+.intel-card.error { border-left: 2px dashed var(--border-light); opacity: 0.5; }
+
+/* Small indicator badges inside the intel cards */
+.badge { font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+.intel-card.clean .badge { background-color: #10B981; color: #ffffff; }
+.intel-card.suspicious .badge { background-color: #F59E0B; color: #ffffff; }
+.intel-card.malicious .badge { background-color: #EF4444; color: #ffffff; }
+.intel-card.error .badge { background-color: var(--border-light); color: var(--text); }
+
+/* ==========================================================================
+   HISTORY ANALYTICS CARDS
+   ========================================================================== */
+.stats-grid { 
+    display: flex; 
+    gap: 20px; 
+    margin-bottom: 30px; 
+    flex-wrap: wrap;
+}
+
+.stat-card { 
+    flex: 1; 
+    min-width: 200px;
+    background: var(--bg); 
+    border: 1px solid var(--border-light); 
+    border-radius: 8px; 
+    padding: 20px; 
+    text-align: center; 
+    box-shadow: 0 4px 6px var(--shadow-light); 
+}
+
+.stat-card h3 { 
+    margin: 0; 
+    font-size: 2.5em; 
+    color: var(--text); 
+    font-weight: 800;
+}
+
+.stat-card p { 
+    margin: 5px 0 0 0; 
+    font-size: 0.85em; 
+    font-weight: 700; 
+    color: var(--text); 
+    opacity: 0.7; 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+}
+
+/* --- Modifier classes for the stat cards --- */
+.stat-card.safe { 
+    border-bottom: 4px solid #10B981; 
+}
+.stat-card.safe h3 { 
+    color: #10B981; 
+}
+
+.stat-card.malicious { 
+    border-bottom: 4px solid #EF4444; 
+}
+.stat-card.malicious h3 { 
+    color: #EF4444; 
+}
+
+/* ==========================================================================
+   HISTORY PAGE (DATA TABLES & CONTROLS)
+   ========================================================================== */
+.history-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border-bottom: 2px solid var(--border-light); 
+    padding-bottom: 20px; 
+    margin-bottom: 30px; 
+}
+
+.history-header h1 { 
+    margin: 0; 
+    color: var(--accent); 
+    font-size: 24px; 
+    font-weight: 800;
+}
+
+.action-buttons { 
+    display: flex; 
+    gap: 10px; 
+}
+
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    text-align: left; 
+}
+
+th, td { 
+    padding: 15px; 
+    border-bottom: 1px solid var(--border-light); 
+}
+
+th { 
+    color: var(--text); 
+    font-size: 14px; 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    font-weight: bold; 
+}
+
+td { 
+    color: var(--text); 
+    font-family: monospace; 
+    font-size: 15px; 
+    word-break: break-all; 
+    vertical-align: middle; 
+    font-weight: 600; 
+}
+
+.score { 
+    font-weight: bold; 
+    font-size: 16px; 
+}
+
+/* History table status badges */
+.badge-low { background: rgba(16, 185, 129, 0.1); color: #10B981; border: 1px solid #10B981; }
+.badge-medium { background: rgba(245, 158, 11, 0.1); color: #F59E0B; border: 1px solid #F59E0B; }
+.badge-high { background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid #EF4444; }
+
+/* * Specific action buttons for the history data management.
+ * These maintain the strict 3-color palette for consistency.
+ */
+.btn-delete { 
+    background: transparent; 
+    border: 1px solid #EF4444; 
+    color: #EF4444;            
+    padding: 6px 12px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    transition: 0.2s; 
+}
+
+.btn-delete:hover { 
+    background: #EF4444;      
+    color: #ffffff;           
+    border-style: solid; 
+}
+
+.btn-clear-all { 
+    background: var(--bg); 
+    border: 2px solid var(--text); 
+    color: var(--text); 
+    padding: 8px 16px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    transition: 0.2s; 
+}
+
+.btn-clear-all:hover { 
+    background: var(--text); 
+    color: var(--bg); 
+}
+
+.btn-export-csv { 
+    background: var(--accent); 
+    border: 2px solid var(--accent); 
+    color: var(--bg); 
+    padding: 8px 16px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    transition: 0.2s; 
+}
+
+.btn-export-csv:hover { 
+    background: var(--text); 
+    border-color: var(--text); 
+}
+
+.empty-state { 
+    text-align: center; 
+    padding: 40px; 
+    color: var(--text); 
+    opacity: 0.7; 
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   UTILITIES & ANIMATIONS
+   ========================================================================== */
+.hidden { 
+    display: none !important; 
+}
+
+/* The loading spinner while the machine learning model evaluates the URL */
+.spinner { 
+    width: 20px; 
+    height: 20px; 
+    border: 3px solid var(--bg); 
+    border-top: 3px solid var(--text); 
+    border-radius: 50%; 
+    animation: spin 0.8s linear infinite; 
+    margin: auto; 
+}
+
+@keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+}
+
+/* Ensure lists inherit the app's main font */
+.text-content ul, 
+.text-content li,
+.reasons ul,
+.reasons li {
+    font-family: inherit;
+    font-size: 1em;
+    color: #333333; /* Matches standard text color */
+    line-height: 1.6;
+}
