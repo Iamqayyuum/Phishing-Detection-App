@@ -1,42 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --bg: #F8FAFC;       /* Color 1: Bright Slate (Background) */
-    --text: #0F172A;     /* Color 2: Deep Ink (Text, borders, headers) */
-    --accent: #0284C7;   /* Color 3: Tech Blue (Buttons, highlights, safe indicators) */
-    
-    /* We use the Deep Ink color with lowered opacity to create soft shadows 
-       without breaking the 3-color limitation rule. */
-    --shadow-light: rgba(15, 23, 42, 0.05); 
-    --border-light: rgba(15, 23, 42, 0.15);
+    --bg: #0b0f19;          /* Deep Space Dark */
+    --text: #e2e8f0;        /* Crisp Light Grey for readability */
+    --neon: #00f3ff;        /* Cyberpunk Neon Cyan */
+    --accent: #ff003c;      /* Neon Red/Pink for alerts/primary actions */
+    --glass-bg: rgba(16, 24, 39, 0.75);
+    --shadow-light: rgba(0, 243, 255, 0.1); 
+    --border-light: rgba(0, 243, 255, 0.2);
 }
 
-/* * 2. GLOBAL RESET & TYPOGRAPHY
- * Ensures consistent sizing and fonts across all browsers.
- */
+/* ==========================================================================
+   GLOBAL RESET & TYPOGRAPHY
+   ========================================================================== */
 * { 
     box-sizing: border-box; 
-    font-family: "Segoe UI", sans-serif; 
+    font-family: 'Rajdhani', sans-serif; 
 }
 
 html, body { 
     height: 100%; 
     margin: 0; 
     padding: 0; 
-    overflow-y: auto; /* Allows scrolling when history tables get long */
+    overflow-y: auto; 
 }
 
 body { 
     background-color: var(--bg); 
+    /* Tactical grid background */
+    background-image: 
+        linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
     color: var(--text); 
     position: relative;
     display: flex;
     flex-direction: column;
 }
 
-/* * 3. ENTERPRISE WATERMARK
- * Anchors the SVG logo perfectly in the center of the screen, floating 
- * behind all other elements at a highly transparent 3% opacity.
- */
 body::before {
     content: "";
     position: fixed;
@@ -51,80 +52,83 @@ body::before {
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    opacity: 0.03; 
+    opacity: 0.05; 
+    filter: drop-shadow(0 0 15px var(--neon));
     z-index: -1; 
-    pointer-events: none; /* Prevents the logo from blocking mouse clicks */
+    pointer-events: none; 
 }
 
 /* ==========================================================================
    NAVIGATION BAR
    ========================================================================== */
-/* Targets both auth-nav and navbar depending on what your HTML uses */
 .auth-nav, .navbar {
     display: flex;
     justify-content: flex-end; 
     align-items: center;
     padding: 15px 30px;
-    background-color: var(--bg);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-light);
+    box-shadow: 0 4px 20px var(--shadow-light);
     gap: 15px; 
 }
 
-/* Styles the "Welcome, username" text */
 .auth-nav span {
-    color: var(--text);
-    font-weight: bold;
-    font-size: 14px;
-    margin-right: auto; /* Pushes the welcome text to the left, buttons to the right */
+    color: var(--neon);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 1px;
+    margin-right: auto; 
+    text-transform: uppercase;
 }
 
-/* Base styling for all navigation buttons */
 .btn-outline, .btn-primary, .btn-danger {
     text-decoration: none;
     padding: 8px 18px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    border: 2px solid;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all 0.3s ease;
+    border: 1px solid;
+    cursor: pointer;
 }
 
-/* 1. Hollow Blue Button (Login, History, Scanner) */
 .btn-outline {
+    color: var(--neon);
+    border-color: var(--neon);
+    background-color: transparent;
+}
+.btn-outline:hover {
+    background-color: rgba(0, 243, 255, 0.1);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+}
+
+.btn-primary {
+    background-color: transparent;
+    color: var(--neon);
+    border-color: var(--neon);
+}
+.btn-primary:hover {
+    background-color: var(--neon);
+    color: var(--bg);
+    box-shadow: 0 0 20px var(--neon);
+}
+
+.btn-danger {
     color: var(--accent);
     border-color: var(--accent);
     background-color: transparent;
 }
-.btn-outline:hover {
-    background-color: var(--accent);
-    color: var(--bg);
-}
-
-/* 2. Solid Blue Button (Create Account) */
-.btn-primary {
-    background-color: var(--accent);
-    color: var(--bg);
-    border-color: var(--accent);
-}
-.btn-primary:hover {
-    background-color: var(--text);
-    border-color: var(--text);
-}
-
-/* 3. Red Warning Button (Logout) */
-.btn-danger {
-    color: #EF4444;
-    border-color: #EF4444;
-    background-color: transparent;
-}
 .btn-danger:hover {
-    background-color: #EF4444;
-    color: #ffffff;
+    background-color: rgba(255, 0, 60, 0.1);
+    box-shadow: 0 0 15px rgba(255, 0, 60, 0.4);
 }
 
-/* ==========================================
+/* ==========================================================================
    USER PROFILE AVATAR
-   ========================================== */
+   ========================================================================== */
 .user-profile {
     display: flex;
     align-items: center;
@@ -135,28 +139,26 @@ body::before {
 .avatar {
     width: 32px;
     height: 32px;
-    background-color: var(--accent);
-    color: var(--bg);
+    background-color: transparent;
+    border: 1px solid var(--neon);
+    box-shadow: 0 0 10px var(--shadow-light);
+    color: var(--neon);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    
-    
-    font-family: inherit; 
     font-weight: 700; 
     font-size: 14px;
 }
 
 .greeting { 
     color: var(--text); 
-    
-    font-family: inherit; 
-    font-size: 15px; 
+    font-size: 16px; 
     font-weight: 500; 
+    letter-spacing: 1px;
 }
-
 .greeting strong {
+    color: var(--neon);
     font-weight: 700; 
 }
 
@@ -180,18 +182,22 @@ body::before {
 }
 
 .header h1 { 
-    color: var(--accent); 
-    font-size: 2.2em; 
+    color: var(--neon); 
+    font-size: 2.8em; 
     margin: 0; 
     font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
 }
 
 .subtitle { 
     color: var(--text); 
-    opacity: 0.7; /* Softens the text without introducing a grey color */
-    margin-top: 5px; 
-    font-size: 0.9em; 
+    margin-top: 10px; 
+    font-size: 1.1em; 
     font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
 }
 
 .main-layout { 
@@ -209,16 +215,15 @@ body::before {
     flex-direction: column; 
 }
 
-/* * UI Cards 
- * Used for the Scanner, Login, Signup, and History sections.
- * Features a soft drop-shadow to separate it from the background watermark.
- */
+/* Glassmorphism UI Cards */
 .input-card, .result-card, .history-card { 
-    background-color: var(--bg); 
-    border-radius: 12px; 
+    background: var(--glass-bg); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 8px; 
     padding: 30px; 
     border: 1px solid var(--border-light); 
-    box-shadow: 0 10px 15px -3px var(--shadow-light), 0 4px 6px -2px var(--shadow-light);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 243, 255, 0.05);
     margin-bottom: 25px;
 }
 
@@ -228,66 +233,70 @@ body::before {
 input[type="text"], input[type="password"] { 
     width: 100%; 
     padding: 14px; 
-    border-radius: 8px; 
+    border-radius: 4px; 
     border: 1px solid var(--border-light); 
-    background-color: var(--bg); 
-    color: var(--text); 
+    background-color: rgba(0, 0, 0, 0.6); 
+    color: var(--neon); 
     margin-bottom: 20px; 
-    font-size: 1em; 
+    font-size: 1.1em; 
+    font-family: monospace;
     font-weight: 600;
     outline: none;
-    transition: all 0.2s ease;
-    box-shadow: inset 0 2px 4px var(--shadow-light);
+    transition: all 0.3s ease;
 }
 
-/* Adds a tech-blue glow when the user clicks inside the input box */
+input[type="text"]::placeholder, input[type="password"]::placeholder {
+    color: rgba(0, 243, 255, 0.3);
+}
+
 input[type="text"]:focus, input[type="password"]:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); 
+    border-color: var(--neon);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); 
 }
 
 #analyze-btn { 
     width: 100%; 
     padding: 14px; 
-    background-color: var(--accent); 
-    border: none; 
-    border-radius: 8px; 
-    font-size: 1.05em;
-    font-weight: bold; 
+    background-color: transparent; 
+    border: 1px solid var(--neon); 
+    border-radius: 4px; 
+    font-size: 1.2em;
+    font-weight: 700; 
+    letter-spacing: 2px;
+    text-transform: uppercase;
     cursor: pointer; 
-    color: var(--bg); 
+    color: var(--neon); 
     display: flex; 
     justify-content: center; 
     align-items: center; 
     height: 50px; 
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 6px rgba(2, 132, 199, 0.2); 
+    transition: all 0.3s ease;
 }
 
-/* Lifts the button slightly when hovered */
 #analyze-btn:hover { 
-    transform: translateY(-2px); 
-    box-shadow: 0 6px 12px rgba(2, 132, 199, 0.3);
+    background-color: var(--neon);
+    color: var(--bg);
+    box-shadow: 0 0 20px var(--neon);
 }
 
 #analyze-btn:disabled { 
-    opacity: 0.6; 
+    opacity: 0.5; 
     cursor: not-allowed; 
-    transform: none;
     box-shadow: none;
+    background-color: transparent;
+    color: var(--neon);
 }
 
-/* --- PASSWORD VISIBILITY TOGGLE --- */
 .password-container {
     position: relative;
     width: 100%;
-    margin-bottom: 20px; /* Moves the bottom spacing to the wrapper */
+    margin-bottom: 20px;
 }
 
 .password-container input[type="password"],
 .password-container input[type="text"] {
-    margin-bottom: 0; /* Removes default margin so it doesn't double up */
-    padding-right: 45px; /* Makes room for the eye icon so text doesn't hide behind it */
+    margin-bottom: 0; 
+    padding-right: 45px; 
 }
 
 .eye-btn {
@@ -298,17 +307,18 @@ input[type="text"]:focus, input[type="password"]:focus {
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--text);
-    opacity: 0.5;
+    color: var(--neon);
+    opacity: 0.6;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .eye-btn:hover {
-    opacity: 1; /* Brightens up when hovered */
+    opacity: 1;
+    filter: drop-shadow(0 0 5px var(--neon));
 }
 
 .eye-btn svg {
@@ -317,8 +327,6 @@ input[type="text"]:focus, input[type="password"]:focus {
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 /* ==========================================================================
@@ -327,32 +335,34 @@ input[type="text"]:focus, input[type="password"]:focus {
 .risk-indicator { 
     display: flex; 
     justify-content: space-between; 
-    font-size: 1.2em; 
+    font-size: 1.4em; 
     margin-bottom: 10px; 
-    font-weight: bold;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .risk-label { 
-    padding: 4px 10px; 
-    border-radius: 6px; 
-    border: 2px solid;
+    padding: 4px 12px; 
+    border-radius: 4px; 
+    border: 1px solid;
+    text-shadow: 0 0 10px currentColor;
 }
 
 .risk-bar-container { 
     width: 100%; 
-    height: 12px; 
-    background-color: var(--bg); 
+    height: 8px; 
+    background-color: rgba(0, 0, 0, 0.5); 
     border: 1px solid var(--border-light); 
-    border-radius: 6px; 
+    border-radius: 4px; 
     margin: 10px 0 20px 0; 
     overflow: hidden; 
 }
 
-/* The loading animation width transition */
 #risk-bar { 
     height: 100%; 
     width: 0%; 
-    transition: width 0.6s ease, background-color 0.4s ease;
+    transition: width 0.6s ease, background-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .intel-section, .reasons, .recommendation { 
@@ -362,89 +372,92 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .intel-section h3, .reasons h3, .recommendation h3 { 
-    margin: 0 0 10px 0; 
-    font-size: 1.1em; 
-    color: var(--accent); 
+    margin: 0 0 15px 0; 
+    font-size: 1.2em; 
+    color: var(--neon); 
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
 }
 
 .intel-grid { 
     display: flex; 
     gap: 15px; 
-    margin-top: 10px; 
     flex-wrap: wrap; 
 }
 
 .intel-card { 
     flex: 1; 
     min-width: 180px; 
-    background-color: var(--bg); 
-    padding: 12px; 
-    border-radius: 8px; 
+    background-color: rgba(0, 0, 0, 0.4); 
+    padding: 15px; 
+    border-radius: 4px; 
     border: 1px solid var(--border-light); 
-    transition: transform 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .intel-card:hover { 
     transform: translateY(-2px); 
-    box-shadow: 0 4px 6px var(--shadow-light); 
+    box-shadow: 0 0 15px var(--shadow-light); 
+    border-color: var(--neon);
 }
 
 .intel-header { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    margin-bottom: 5px; 
+    margin-bottom: 10px; 
+    font-size: 1.1em;
+    font-weight: 700;
 }
 
 .intel-detail { 
-    font-size: 0.85rem; 
+    font-size: 0.95rem; 
     color: var(--text); 
     margin: 0; 
     line-height: 1.4; 
-    font-weight: 600; 
+    font-family: monospace;
 }
 
 .reasons ul { 
     padding-left: 20px; 
     color: var(--text); 
-    font-size: 0.95em; 
-    font-weight: 500; 
+    font-size: 1.05em; 
     margin: 0; 
 }
 
-.reasons li { margin-bottom: 6px; }
+.reasons li { 
+    margin-bottom: 8px; 
+}
 
 #recommendation-text { 
     color: var(--text); 
-    font-size: 0.95em; 
-    font-weight: bold; 
+    font-size: 1.1em; 
+    font-weight: 600; 
     margin: 0; 
     line-height: 1.5; 
 }
 
 /* ==========================================================================
-   SEMANTIC RISK COLORS (Exceptions to the 3-color rule for safety alerts)
-   Green = Safe, Yellow = Suspicious, Red = Malicious
+   SEMANTIC RISK COLORS (Neon Cyberpunk Variants)
    ========================================================================== */
-.low-risk { color: #10B981; border-color: #10B981; background-color: rgba(16, 185, 129, 0.1); }
-.medium-risk { color: #F59E0B; border-color: #F59E0B; background-color: rgba(245, 158, 11, 0.1); }
-.high-risk { color: #EF4444; border-color: #EF4444; background-color: rgba(239, 68, 68, 0.1); }
+.low-risk { color: #00ff66; border-color: #00ff66; box-shadow: 0 0 15px rgba(0, 255, 102, 0.2); }
+.medium-risk { color: #ffaa00; border-color: #ffaa00; box-shadow: 0 0 15px rgba(255, 170, 0, 0.2); }
+.high-risk { color: #ff003c; border-color: #ff003c; box-shadow: 0 0 15px rgba(255, 0, 60, 0.2); }
 
-#risk-bar.bar-low { background-color: #10B981; }
-#risk-bar.bar-medium { background-color: #F59E0B; }
-#risk-bar.bar-high { background-color: #EF4444; }
+#risk-bar.bar-low { background-color: #00ff66; box-shadow: 0 0 10px #00ff66; }
+#risk-bar.bar-medium { background-color: #ffaa00; box-shadow: 0 0 10px #ffaa00; }
+#risk-bar.bar-high { background-color: #ff003c; box-shadow: 0 0 10px #ff003c; }
 
-.intel-card.clean { border-left: 6px solid #10B981; }
-.intel-card.suspicious { border-left: 6px solid #F59E0B; }
-.intel-card.malicious { border-left: 6px solid #EF4444; }
-.intel-card.error { border-left: 2px dashed var(--border-light); opacity: 0.5; }
+.intel-card.clean { border-left: 4px solid #00ff66; }
+.intel-card.suspicious { border-left: 4px solid #ffaa00; }
+.intel-card.malicious { border-left: 4px solid #ff003c; }
+.intel-card.error { border-left: 2px dashed rgba(255,255,255,0.3); }
 
-/* Small indicator badges inside the intel cards */
-.badge { font-size: 0.65rem; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-.intel-card.clean .badge { background-color: #10B981; color: #ffffff; }
-.intel-card.suspicious .badge { background-color: #F59E0B; color: #ffffff; }
-.intel-card.malicious .badge { background-color: #EF4444; color: #ffffff; }
-.intel-card.error .badge { background-color: var(--border-light); color: var(--text); }
+.badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 2px; font-weight: 700; text-transform: uppercase;}
+.intel-card.clean .badge { background-color: rgba(0, 255, 102, 0.1); color: #00ff66; border: 1px solid #00ff66; }
+.intel-card.suspicious .badge { background-color: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid #ffaa00; }
+.intel-card.malicious .badge { background-color: rgba(255, 0, 60, 0.1); color: #ff003c; border: 1px solid #ff003c; }
+.intel-card.error .badge { background-color: transparent; color: var(--text); border: 1px solid var(--text); }
 
 /* ==========================================================================
    HISTORY ANALYTICS CARDS
@@ -459,45 +472,40 @@ input[type="text"]:focus, input[type="password"]:focus {
 .stat-card { 
     flex: 1; 
     min-width: 200px;
-    background: var(--bg); 
+    background: rgba(0, 0, 0, 0.4); 
     border: 1px solid var(--border-light); 
-    border-radius: 8px; 
+    border-radius: 4px; 
     padding: 20px; 
     text-align: center; 
-    box-shadow: 0 4px 6px var(--shadow-light); 
+    transition: all 0.3s ease;
+}
+.stat-card:hover {
+    border-color: var(--neon);
+    box-shadow: 0 0 15px var(--shadow-light);
 }
 
 .stat-card h3 { 
     margin: 0; 
-    font-size: 2.5em; 
-    color: var(--text); 
+    font-size: 3em; 
+    color: var(--neon); 
     font-weight: 800;
+    text-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
 }
 
 .stat-card p { 
-    margin: 5px 0 0 0; 
-    font-size: 0.85em; 
+    margin: 10px 0 0 0; 
+    font-size: 1em; 
     font-weight: 700; 
     color: var(--text); 
-    opacity: 0.7; 
     text-transform: uppercase; 
-    letter-spacing: 1px; 
+    letter-spacing: 2px; 
 }
 
-/* --- Modifier classes for the stat cards --- */
-.stat-card.safe { 
-    border-bottom: 4px solid #10B981; 
-}
-.stat-card.safe h3 { 
-    color: #10B981; 
-}
+.stat-card.safe { border-bottom: 2px solid #00ff66; }
+.stat-card.safe h3 { color: #00ff66; text-shadow: 0 0 10px rgba(0, 255, 102, 0.4); }
 
-.stat-card.malicious { 
-    border-bottom: 4px solid #EF4444; 
-}
-.stat-card.malicious h3 { 
-    color: #EF4444; 
-}
+.stat-card.malicious { border-bottom: 2px solid #ff003c; }
+.stat-card.malicious h3 { color: #ff003c; text-shadow: 0 0 10px rgba(255, 0, 60, 0.4); }
 
 /* ==========================================================================
    HISTORY PAGE (DATA TABLES & CONTROLS)
@@ -506,21 +514,23 @@ input[type="text"]:focus, input[type="password"]:focus {
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    border-bottom: 2px solid var(--border-light); 
+    border-bottom: 1px solid var(--border-light); 
     padding-bottom: 20px; 
     margin-bottom: 30px; 
 }
 
 .history-header h1 { 
     margin: 0; 
-    color: var(--accent); 
-    font-size: 24px; 
+    color: var(--neon); 
+    font-size: 28px; 
     font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 .action-buttons { 
     display: flex; 
-    gap: 10px; 
+    gap: 15px; 
 }
 
 table { 
@@ -531,15 +541,15 @@ table {
 
 th, td { 
     padding: 15px; 
-    border-bottom: 1px solid var(--border-light); 
+    border-bottom: 1px solid rgba(0, 243, 255, 0.1); 
 }
 
 th { 
-    color: var(--text); 
-    font-size: 14px; 
+    color: var(--neon); 
+    font-size: 16px; 
     text-transform: uppercase; 
-    letter-spacing: 1px; 
-    font-weight: bold; 
+    letter-spacing: 1.5px; 
+    font-weight: 700; 
 }
 
 td { 
@@ -548,77 +558,81 @@ td {
     font-size: 15px; 
     word-break: break-all; 
     vertical-align: middle; 
-    font-weight: 600; 
 }
 
 .score { 
-    font-weight: bold; 
-    font-size: 16px; 
+    font-weight: 700; 
+    font-size: 18px; 
 }
 
 /* History table status badges */
-.badge-low { background: rgba(16, 185, 129, 0.1); color: #10B981; border: 1px solid #10B981; }
-.badge-medium { background: rgba(245, 158, 11, 0.1); color: #F59E0B; border: 1px solid #F59E0B; }
-.badge-high { background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid #EF4444; }
+.badge-low { background: rgba(0, 255, 102, 0.1); color: #00ff66; border: 1px solid #00ff66; text-shadow: 0 0 5px #00ff66;}
+.badge-medium { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid #ffaa00; text-shadow: 0 0 5px #ffaa00;}
+.badge-high { background: rgba(255, 0, 60, 0.1); color: #ff003c; border: 1px solid #ff003c; text-shadow: 0 0 5px #ff003c;}
 
-/* * Specific action buttons for the history data management.
- * These maintain the strict 3-color palette for consistency.
- */
 .btn-delete { 
     background: transparent; 
-    border: 1px solid #EF4444; 
-    color: #EF4444;            
+    border: 1px solid #ff003c; 
+    color: #ff003c;            
     padding: 6px 12px; 
-    border-radius: 4px; 
+    border-radius: 2px; 
     cursor: pointer; 
-    font-weight: bold; 
-    transition: 0.2s; 
+    font-weight: 700; 
+    text-transform: uppercase;
+    transition: 0.3s; 
 }
 
 .btn-delete:hover { 
-    background: #EF4444;      
-    color: #ffffff;           
-    border-style: solid; 
+    background: rgba(255, 0, 60, 0.2); 
+    box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);
 }
 
 .btn-clear-all { 
-    background: var(--bg); 
-    border: 2px solid var(--text); 
+    background: transparent; 
+    border: 1px solid var(--text); 
     color: var(--text); 
     padding: 8px 16px; 
-    border-radius: 6px; 
+    border-radius: 4px; 
     cursor: pointer; 
-    font-weight: bold; 
-    transition: 0.2s; 
+    font-weight: 700; 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: 0.3s; 
 }
 
 .btn-clear-all:hover { 
-    background: var(--text); 
-    color: var(--bg); 
+    border-color: var(--neon); 
+    color: var(--neon); 
+    box-shadow: 0 0 10px var(--shadow-light);
 }
 
 .btn-export-csv { 
-    background: var(--accent); 
-    border: 2px solid var(--accent); 
-    color: var(--bg); 
+    background: transparent; 
+    border: 1px solid var(--neon); 
+    color: var(--neon); 
     padding: 8px 16px; 
-    border-radius: 6px; 
+    border-radius: 4px; 
     cursor: pointer; 
-    font-weight: bold; 
-    transition: 0.2s; 
+    font-weight: 700; 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: 0.3s; 
 }
 
 .btn-export-csv:hover { 
-    background: var(--text); 
-    border-color: var(--text); 
+    background: var(--neon);
+    color: var(--bg);
+    box-shadow: 0 0 15px var(--neon);
 }
 
 .empty-state { 
     text-align: center; 
     padding: 40px; 
-    color: var(--text); 
+    color: var(--neon); 
     opacity: 0.7; 
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 /* ==========================================================================
@@ -628,29 +642,19 @@ td {
     display: none !important; 
 }
 
-/* The loading spinner while the machine learning model evaluates the URL */
 .spinner { 
-    width: 20px; 
-    height: 20px; 
-    border: 3px solid var(--bg); 
-    border-top: 3px solid var(--text); 
+    width: 24px; 
+    height: 24px; 
+    border: 3px solid transparent; 
+    border-top: 3px solid var(--neon);
+    border-right: 3px solid var(--neon);
     border-radius: 50%; 
     animation: spin 0.8s linear infinite; 
     margin: auto; 
+    filter: drop-shadow(0 0 5px var(--neon));
 }
 
 @keyframes spin { 
     0% { transform: rotate(0deg); } 
     100% { transform: rotate(360deg); } 
-}
-
-/* Ensure lists inherit the app's main font */
-.text-content ul, 
-.text-content li,
-.reasons ul,
-.reasons li {
-    font-family: inherit;
-    font-size: 1em;
-    color: #333333; /* Matches standard text color */
-    line-height: 1.6;
 }

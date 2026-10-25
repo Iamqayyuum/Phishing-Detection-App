@@ -9,12 +9,15 @@
     <div class="main-layout">
         <div class="content-area">
             
-            <section class="input-card">
+            <section class="input-card" style="position: relative; overflow: hidden;">
+                <!-- Cyberpunk Laser Scan Animation -->
+                <div id="laser-scanner" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #00f3ff; box-shadow: 0 0 15px #00f3ff; transform: translateY(-10px); transition: transform 1.5s ease-in-out; opacity: 0; z-index: 10;"></div>
+                
                 <form id="analyze-form" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-                    <input type="text" id="url-input" placeholder="Enter a website URL..." required autocomplete="off" style="width: 100%;">
+                    <input type="text" id="url-input" placeholder="> Enter a website URL to scan..." required autocomplete="off" style="width: 100%;">
                     
                     <button type="submit" id="analyze-btn">
-                        <span id="btn-text">Analyze URL</span>
+                        <span id="btn-text">Initiate Scan</span>
                         <div id="spinner" class="spinner hidden"></div>
                     </button>
                 </form>
@@ -23,7 +26,7 @@
             <section id="result-card" class="result-card hidden">
                 <div class="risk-indicator">
                     <span id="risk-category" class="risk-label"></span>
-                    <span id="risk-score"></span>
+                    <span id="risk-score" style="color: var(--neon); text-shadow: 0 0 10px rgba(0,243,255,0.3);"></span>
                 </div>
 
                 <div class="risk-bar-container">
@@ -42,7 +45,7 @@
 
                 <div class="recommendation">
                     <h3>Recommended Action</h3>
-                <div id="recommendation-text" class="text-content"></div>
+                    <div id="recommendation-text" class="text-content"></div>
                 </div>
             </section>
         </div>
@@ -54,12 +57,16 @@
     const analyzeBtn = document.getElementById("analyze-btn");
     const btnText = document.getElementById("btn-text");
     const spinner = document.getElementById("spinner");
+    const laserScanner = document.getElementById("laser-scanner");
 
+    let scanInterval;
+
+    // Maps the API response to your new Cyberpunk CSS classes
     function categoryToClass(category) {
         const c = (category || "").toLowerCase().trim();
-        if (c === "low risk") return "low-risk";
+        if (c === "safe" || c === "low risk") return "low-risk";
         if (c === "suspicious") return "medium-risk";
-        if (c === "high risk") return "high-risk";
+        if (c === "malicious" || c === "high risk") return "high-risk";
         return "medium-risk"; 
     }
 
@@ -67,8 +74,8 @@
         const bar = document.getElementById("risk-bar");
         bar.classList.remove("bar-low", "bar-medium", "bar-high");
         const c = (category || "").toLowerCase().trim();
-        if (c === "low risk") bar.classList.add("bar-low");
-        else if (c === "high risk") bar.classList.add("bar-high");
+        if (c === "safe" || c === "low risk") bar.classList.add("bar-low");
+        else if (c === "malicious" || c === "high risk") bar.classList.add("bar-high");
         else bar.classList.add("bar-medium");
     }
 
@@ -78,13 +85,22 @@
 
         const urlRegex = /^(https?:\/\/)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:[0-9]{1,3}\.){3}[0-9]{1,3})(:[0-9]+)?(\/.*)?$/;
         if (!urlRegex.test(url)) {
-            alert("Invalid format!");
+            alert("Invalid format! Please enter a valid web address.");
             return;
         }
 
+        // Lock UI and start animations
         analyzeBtn.disabled = true;
         btnText.classList.add("hidden");
         spinner.classList.remove("hidden");
+        
+        // Start Laser Animation
+        laserScanner.style.opacity = "1";
+        let moveDown = true;
+        scanInterval = setInterval(() => {
+            laserScanner.style.transform = moveDown ? "translateY(70px)" : "translateY(-10px)";
+            moveDown = !moveDown;
+        }, 1500);
 
         try {
             const formData = new FormData();
@@ -95,70 +111,73 @@
             if (data.error) { alert(data.error); return; }
 
             document.getElementById("result-card").classList.remove("hidden");
-            document.getElementById("risk-score").innerText = `Score: ${data.risk_score}/100`;
+            document.getElementById("risk-score").innerText = `SCORE: ${parseFloat(data.risk_score).toFixed(2)}/100`;
             document.getElementById("risk-bar").style.width = data.risk_score + "%";
             document.getElementById("risk-category").innerText = data.risk_category;
             document.getElementById("risk-category").className = "risk-label " + categoryToClass(data.risk_category);
             setRiskBarClass(data.risk_category);
 
-            // Render Threat Intel Grid
+            // Render Threat Intel Grid (Fixed mapping to match Python output)
             const grid = document.getElementById("intel-grid");
             grid.innerHTML = ""; 
             if (data.intel_results && Array.isArray(data.intel_results) && data.intel_results.length > 0) {
-                grid.innerHTML = data.intel_results.map(intel => `
-                    <div class="intel-card ${intel.verdict ? intel.verdict.toLowerCase() : 'neutral'}">
+                grid.innerHTML = data.intel_results.map(intel => {
+                    const statusClass = (intel.status || "neutral").toLowerCase();
+                    return `
+                    <div class="intel-card ${statusClass}">
                         <div class="intel-header">
                             <strong>${intel.source || 'Unknown'}</strong>
-                            <span class="badge">${intel.verdict ? intel.verdict.toUpperCase() : 'N/A'}</span>
+                            <span class="badge">${intel.status ? intel.status.toUpperCase() : 'N/A'}</span>
                         </div>
-                        <p class="intel-detail">${intel.detail || 'No details provided.'}</p>
+                        <p class="intel-detail">${intel.details || 'No details provided.'}</p>
                     </div>
-                `).join('');
+                `}).join('');
             } else {
-                grid.innerHTML = '<p style="color:#8b949e; font-size:0.8em; padding: 10px;">No external intelligence data available.</p>';
+                grid.innerHTML = '<p style="color:var(--text); opacity: 0.6; font-family: monospace;">[!] NO EXTERNAL INTELLIGENCE DATA AVAILABLE.</p>';
             }
 
-            // Render Findings List with 3-color theme mapping
+            // Render Findings List (Fixed to read data.findings)
             const reasonList = document.getElementById("reason-list");
-            reasonList.innerHTML = (data.reasons || []).map(r => {
-                let cssClass = "finding-item";
-                
-                // Assigning to your 3-color scheme (Red/Orange/Blue)
-                if (r.includes("CRITICAL OVERRIDE")) cssClass += " critical"; 
-                else if (r.includes("Threat Intelligence")) cssClass += " threat"; 
-                else cssClass += " low"; 
-                
-                let parts = r.includes(":") ? r.split(":", 2) : ["Finding", r];
-                return `<li class="${cssClass}"><strong>${parts[0]}:</strong> ${parts[1]}</li>`;
-            }).join('');
+            const findingsArray = data.findings || data.reasons || [];
+            
+            if (findingsArray.length > 0) {
+                reasonList.innerHTML = findingsArray.map(r => {
+                    let cssClass = "finding-item";
+                    let parts = r.includes(":") ? r.split(":", 2) : ["Finding", r];
+                    return `<li class="${cssClass}"><strong style="color: var(--neon);">${parts[0]}:</strong> ${parts[1]}</li>`;
+                }).join('');
+            } else {
+                reasonList.innerHTML = `<li>No specific anomalies detected in this URL.</li>`;
+            }
 
-            // Render Recommendations cleanly (Handles both Arrays and Strings)
+            // Render Recommendations cleanly
             const recContainer = document.getElementById("recommendation-text");
             const recData = data.recommendations || data.recommendation || "";
             
             if (Array.isArray(recData)) {
-                // If it's a list, format it with bullet points and spacing
-                recContainer.innerHTML = `<ul style="list-style-type: disc; padding-left: 20px; margin-top: 10px;">` + 
+                recContainer.innerHTML = `<ul style="list-style-type: none; padding-left: 0; margin-top: 10px;">` + 
                     recData.map(item => {
-                        // Bold the label (e.g., "Immediate Action:") if a colon exists
                         let parts = item.split(":");
                         if (parts.length > 1) {
-                            return `<li style="margin-bottom: 10px;"><strong>${parts[0]}:</strong>${parts.slice(1).join(":")}</li>`;
+                            return `<li style="margin-bottom: 10px; border-left: 2px solid var(--neon); padding-left: 10px;"><strong style="color:var(--neon);">${parts[0]}:</strong>${parts.slice(1).join(":")}</li>`;
                         }
-                        return `<li style="margin-bottom: 10px;">${item}</li>`;
+                        return `<li style="margin-bottom: 10px; border-left: 2px solid var(--neon); padding-left: 10px;">${item}</li>`;
                     }).join('') + `</ul>`;
             } else {
-                // If it's a single standard sentence, just display it normally
                 recContainer.innerText = recData;
             }
 
         } catch (err) { 
             console.error(err);
-            alert("Analysis failed."); 
+            alert("Analysis failed to complete. Check console logs."); 
         } finally { 
+            // Reset UI and stop animation
             analyzeBtn.disabled = false; 
             btnText.classList.remove("hidden"); 
             spinner.classList.add("hidden"); 
+            clearInterval(scanInterval);
+            laserScanner.style.opacity = "0";
+            laserScanner.style.transform = "translateY(-10px)";
         }
     };
     </script>
