@@ -17,9 +17,10 @@ import pandas as pd
 # Bringing in the heavy lifters: our custom AI and API modules
 from core.url_processor import normalize_url, is_valid_url, expand_short_url
 from core.feature_extractor import extract_features
-from core.threat_intel import query_threat_intelligence
+from core.threat_intel import query_threat_intelligence, openphish_engine
 from core.scoring import compute_final_risk
 from core.explanation import recommendations_for
+from config import GOOGLE_SAFE_BROWSING_API_KEY
 
 # Fire up the Flask application
 app = Flask(__name__)
@@ -164,12 +165,8 @@ def delete_scan(scan_id):
 @app.route('/clear_history', methods=['POST'])
 @login_required
 def clear_history():
-    # 1. Delete only the current user's scan records
     ScanHistory.query.filter_by(user_id=current_user.id).delete()
-    
-    # 2. Commit the changes safely without touching the global ID sequence
     db.session.commit()
-    
     return redirect(url_for('history'))
 
 @app.route('/export_to_server', methods=['POST'])
@@ -194,20 +191,40 @@ def export_to_server():
 # ==========================================
 @app.route("/", methods=["GET"])
 def home():
-    return render_template("index.html")
+    # Calculate real-time stats from database
+    if current_user.is_authenticated:
+        total_scans = ScanHistory.query.filter_by(user_id=current_user.id).count()
+        threats_detected = ScanHistory.query.filter(
+            ScanHistory.user_id == current_user.id,
+            ScanHistory.status.in_(['Malicious', 'High Risk'])
+        ).count()
+    else:
+        total_scans = ScanHistory.query.count()
+        threats_detected = ScanHistory.query.filter(ScanHistory.status.in_(['Malicious', 'High Risk'])).count()
+
+    # Dynamic system health status checks
+    ml_status = "LOADED" if model_pipeline else "OFFLINE"
+    api_gateway_status = "ONLINE"
+    openphish_status = "ACTIVE" if openphish_engine else "STANDBY"
+    google_web_risk_status = "SYNCED" if GOOGLE_SAFE_BROWSING_API_KEY else "KEY MISSING"
+
+    return render_template(
+        "index.html",
+        total_scans=total_scans,
+        threats_detected=threats_detected,
+        ml_status=ml_status,
+        api_gateway_status=api_gateway_status,
+        openphish_status=openphish_status,
+        google_web_risk_status=google_web_risk_status
+    )
 
 @app.route("/analyze", methods=["POST"])
 @limiter.limit("5 per minute") 
 def analyze():
     raw_url = request.form.get("url", "").strip()
 
-    # ==========================================
-    # 🛡️ THE PROTOCOL NORMALIZATION PATCH
-    # ==========================================
-    # Force naked domains into a standard structure for the ML model
     if not raw_url.startswith("http://") and not raw_url.startswith("https://"):
         raw_url = "https://" + raw_url
-    # ==========================================
 
     url_pattern = re.compile(r'^(https?://)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:\d{1,3}\.){3}\d{1,3})(:[0-9]+)?(/.*)?$')
     
@@ -219,17 +236,11 @@ def analyze():
     normalized = normalize_url(raw_url)
     target_url = expand_short_url(normalized)
 
-   # ==========================================
-    # 🌟 THE ENTERPRISE WHITELIST PATCH (UPDATED)
-    # ==========================================
     from urllib.parse import urlparse
-    
-    # Extract the core domain (e.g., 'google.com' from 'https://www.google.com/')
     parsed_domain = urlparse(target_url).netloc.lower()
     if parsed_domain.startswith("www."):
         parsed_domain = parsed_domain[4:]
         
-    # Top Trusted Global Domains (Bypass ML to prevent False Positives)
     TRUSTED_DOMAINS = {
         "google.com", "youtube.com", "facebook.com", "apple.com", 
         "microsoft.com", "github.com", "linkedin.com", "yahoo.com", 
@@ -237,7 +248,6 @@ def analyze():
     }
 
     if parsed_domain in TRUSTED_DOMAINS:
-        # Run real APIs so the frontend gets the exact data structure it expects!
         intel_results = query_threat_intelligence(target_url)
         
         result = {
@@ -252,7 +262,6 @@ def analyze():
             "recommendations": ["This is a globally trusted and verified domain. Safe to browse."]
         }
         
-        # Log the safe scan to the database
         if current_user.is_authenticated:
             new_scan = ScanHistory(
                 url_scanned=target_url,
@@ -264,7 +273,6 @@ def analyze():
             db.session.commit()
             
         return jsonify(result)
-    # ==========================================
 
     if not is_valid_url(target_url):
         return jsonify({
@@ -272,33 +280,23 @@ def analyze():
         }), 400
 
     try:
-        # Extract the mathematical features
         features = extract_features(target_url)
-        
-        # Assign raw_url properly so the NLP Pipeline can read it
         features["raw_url"] = target_url  
         
-        # NLP PIPELINE PREDICTION LOGIC
-        # Convert the dictionary to a 1-row Pandas DataFrame required by the pipeline
         df = pd.DataFrame([features])
         
         if model_pipeline:
-            # Get the probability of Class 1 (Phishing)
             ml_probability = float(model_pipeline.predict_proba(df)[0][1])
         else:
-            ml_probability = 0.5 # Fallback if model fails to load
+            ml_probability = 0.5
 
-        # Query APIs using the TRUE destination
         intel_results = query_threat_intelligence(target_url)
-
-        # Compute the final risk score combining ML + Threat Intel
         result = compute_final_risk(features, intel_results, ml_probability)
 
         result["intel_results"] = [res.__dict__ for res in intel_results]
         result["url"] = target_url
         result["recommendations"] = recommendations_for(result["risk_category"])
 
-        # Save to history if logged in
         if current_user.is_authenticated:
             new_scan = ScanHistory(
                 url_scanned=target_url,
@@ -314,7 +312,7 @@ def analyze():
     except Exception as e:
         logging.error(f"Engine Crash during URL analysis: {str(e)}")
         import traceback
-        traceback.print_exc() # Prints the exact line of the crash to your terminal
+        traceback.print_exc()
         return jsonify({
             "error": "Our detection engine hit a snag while analyzing this URL.",
             "details": str(e)
@@ -323,7 +321,6 @@ def analyze():
 @app.route("/api/v1/analyze", methods=["POST"])
 @limiter.limit("60 per minute")
 def api_analyze():
-    """Enterprise REST API Endpoint for remote SIEM/Bot integrations."""
     data = request.get_json()
     if not data or 'url' not in data:
         return jsonify({"error": "Malformed request. Please provide a JSON body with a 'url' key."}), 400

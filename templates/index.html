@@ -6,9 +6,26 @@
         <p class="subtitle">Detect suspicious links using ML, Heuristics, and Threat Intelligence.</p>
     </div>
 
-    <div class="main-layout">
-        <div class="content-area">
-            
+    <!-- 3-Column SOC Layout Container with Wider Center -->
+    <div class="main-layout" style="display: grid; grid-template-columns: 240px minmax(600px, 2fr) 240px; gap: 20px; align-items: start; max-width: 1500px; margin: 0 auto; padding: 0 20px;">
+        
+        <!-- LEFT SIDEBAR: Real System Telemetry -->
+        <aside class="sidebar-panel" style="background: rgba(10, 25, 47, 0.7); border: 1px solid var(--border-light, #00f3ff33); border-radius: 8px; padding: 20px; backdrop-filter: blur(10px);">
+            <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid var(--border-light, #00f3ff33); padding-bottom: 8px; margin-top: 0;">[SYS] Telemetry</h3>
+            <ul style="list-style: none; padding: 0; margin: 15px 0 0 0; font-family: monospace; font-size: 0.9em; line-height: 1.8;">
+                <li><span style="color: #00ff66;">●</span> API Gateway: <strong style="color: #fff;">{{ api_gateway_status }}</strong></li>
+                <li><span style="color: #00ff66;">●</span> Random Forest: <strong style="color: #fff;">{{ ml_status }}</strong></li>
+                <li><span style="color: #00ff66;">●</span> OpenPhish Feed: <strong style="color: #fff;">{{ openphish_status }}</strong></li>
+                <li><span style="color: #00ff66;">●</span> Google Web Risk: <strong style="color: #fff;">{{ google_web_risk_status }}</strong></li>
+                <li><span style="color: var(--neon);">●</span> Protocol: <strong style="color: #fff;">HTTPS/TLS</strong></li>
+            </ul>
+            <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--border-light, #00f3ff33);">
+                <p style="font-size: 0.8em; color: var(--text); opacity: 0.7; margin: 0;">Defense-in-depth engine active. Monitoring lexical anomalies and threat feeds in real-time.</p>
+            </div>
+        </aside>
+
+        <!-- CENTER CONTENT AREA: Scanner & Results (Wider) -->
+        <div class="content-area" style="width: 100%;">
             <section class="input-card" style="position: relative; overflow: hidden;">
                 <!-- Cyberpunk Laser Scan Animation -->
                 <div id="laser-scanner" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #00f3ff; box-shadow: 0 0 15px #00f3ff; transform: translateY(-10px); transition: transform 1.5s ease-in-out; opacity: 0; z-index: 10;"></div>
@@ -49,6 +66,25 @@
                 </div>
             </section>
         </div>
+
+        <!-- RIGHT SIDEBAR: Real Operational Metrics -->
+        <aside class="sidebar-panel" style="background: rgba(10, 25, 47, 0.7); border: 1px solid var(--border-light, #00f3ff33); border-radius: 8px; padding: 20px; backdrop-filter: blur(10px);">
+            <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid var(--border-light, #00f3ff33); padding-bottom: 8px; margin-top: 0;">[METRICS] Feed</h3>
+            <div style="margin-top: 15px; font-family: monospace; font-size: 0.9em;">
+                <p style="margin: 0 0 5px 0; color: var(--text); opacity: 0.8;">Total Scans Processed:</p>
+                <p style="margin: 0 0 15px 0; color: var(--neon); font-size: 1.3em; font-weight: bold;">{{ total_scans }}</p>
+                
+                <p style="margin: 0 0 5px 0; color: var(--text); opacity: 0.8;">Threats Neutralized:</p>
+                <p style="margin: 0 0 15px 0; color: #ff003c; font-size: 1.3em; font-weight: bold;">{{ threats_detected }}</p>
+
+                <p style="margin: 0 0 5px 0; color: var(--text); opacity: 0.8;">Engine State:</p>
+                <p style="margin: 0; color: #00ff66; font-size: 1.1em;">ACTIVE</p>
+            </div>
+            <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--border-light, #00f3ff33);">
+                <span style="display: inline-block; background: rgba(0,243,255,0.1); color: var(--neon); padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-family: monospace;">SECURE MODE v2.1</span>
+            </div>
+        </aside>
+
     </div>
 
     <script>
@@ -92,7 +128,6 @@
         btnText.classList.add("hidden");
         spinner.classList.remove("hidden");
         
-        // Start Laser Animation
         laserScanner.style.opacity = "1";
         let moveDown = true;
         scanInterval = setInterval(() => {
