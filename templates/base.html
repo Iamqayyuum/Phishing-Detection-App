@@ -17,9 +17,13 @@
             <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
             <a href="{{ url_for('history') }}" class="btn-outline">History</a>
             <a href="{{ url_for('logout') }}" class="btn-outline">Logout</a>
+            <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
+            <a href="{{ url_for('about') }}" class="btn-outline">About</a>   
         {% else %}
             <a href="{{ url_for('login') }}" class="btn-outline">Login</a>
             <a href="{{ url_for('signup') }}" class="btn-outline">Create Account</a>
+            <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
+            <a href="{{ url_for('about') }}" class="btn-outline">About</a>       
         {% endif %}
     </nav>
 

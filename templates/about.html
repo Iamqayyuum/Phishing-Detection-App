@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="header">
+        <h1>Platform Overview</h1>
+        <p class="subtitle">Enterprise-Grade Hybrid Phishing Protection</p>
+    </div>
+
+    <div class="main-layout">
+        <div class="content-area">
+            
+            <!-- Mission Statement -->
+            <section class="result-card">
+                <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
+                    <h3 style="color: var(--neon); font-size: 1.5em; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">Our Mission</h3>
+                    <p style="color: var(--text); line-height: 1.6; font-size: 1.1em;">
+                        As cyber threat actors deploy automated, zero-day infrastructure faster than traditional blocklists can update, everyday users face unprecedented digital risks. This platform was engineered to democratize advanced cybersecurity, providing real-time, multi-layered threat analysis to protect individuals and organizations from sophisticated social engineering campaigns.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Defense-in-Depth Architecture -->
+            <section class="result-card" style="margin-top: -10px;">
+                <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
+                    <h3 style="color: var(--neon); font-size: 1.5em; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">Multi-Layered Detection Engine</h3>
+                    <p style="color: var(--text); line-height: 1.6; font-size: 1.1em; margin-bottom: 20px;">
+                        To achieve high accuracy and prevent false positives, our system employs a defense-in-depth architecture consisting of three core analysis pillars:
+                    </p>
+                    <ul style="color: var(--text); line-height: 1.6; font-size: 1.05em; margin-bottom: 20px;">
+                        <li style="margin-bottom: 15px;">
+                            <strong style="color: var(--neon);">1. Lexical & Heuristic Analysis:</strong> 
+                            The engine evaluates the structural properties of a URL—such as entropy rates, character anomalies, and obfuscation markers (e.g., deep-path masking and IP routing)—before any network request is made.
+                        </li>
+                        <li style="margin-bottom: 15px;">
+                            <strong style="color: var(--neon);">2. Machine Learning (Random Forest Classifier):</strong> 
+                            A supervised machine learning model analyzes the extracted feature vector. This enables the platform to detect zero-day phishing links that have never been reported to public blacklists.
+                        </li>
+                        <li style="margin-bottom: 15px;">
+                            <strong style="color: var(--neon);">3. Real-Time Threat Intelligence:</strong> 
+                            For final validation, the system queries global open-source intelligence (OSINT) and threat feeds, cross-referencing domain reputation to establish an instantaneous consensus.
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Why Hybrid Detection Matters -->
+            <section class="result-card" style="margin-top: -10px;">
+                <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
+                    <h3 style="color: var(--neon); font-size: 1.5em; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">Why Hybrid Detection?</h3>
+                    <div class="intel-grid">
+                        <div class="intel-card" style="border-left: 4px solid var(--neon);">
+                            <div class="intel-header"><strong>Zero-Day Resiliency</strong></div>
+                            <p class="intel-detail">Static blocklists fail against newly registered domains. ML heuristics catch malicious intent instantly.</p>
+                        </div>
+                        <div class="intel-card" style="border-left: 4px solid #00ff66;">
+                            <div class="intel-header"><strong>Low False Positives</strong></div>
+                            <p class="intel-detail">Enterprise whitelisting safely bypasses trusted global domains, ensuring seamless user experience.</p>
+                        </div>
+                        <div class="intel-card" style="border-left: 4px solid #ffaa00;">
+                            <div class="intel-header"><strong>Actionable Insights</strong></div>
+                            <p class="intel-detail">Clear risk scores and breakdown metrics explain <em>why</em> a link is dangerous, educating users in real-time.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Enterprise Integration -->
+            <section class="result-card" style="margin-top: -10px;">
+                <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
+                    <h3 style="color: var(--neon); font-size: 1.5em; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">Developer & API Access</h3>
+                    <p style="color: var(--text); line-height: 1.6; font-size: 1.1em;">
+                        Built for adaptability, the platform exposes a secured RESTful API endpoint (<code style="color: var(--neon);">/api/v1/analyze</code>). This allows developers and security teams to integrate the hybrid detection engine directly into custom browser extensions, internal security monitoring tools, or automated incident response workflows.
+                    </p>
+                </div>
+            </section>
+
+        </div>
+    </div>
+{% endblock %}
