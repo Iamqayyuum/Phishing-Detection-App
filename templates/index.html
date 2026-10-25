@@ -1,16 +1,64 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="header">
+    <style>
+        /* Default Desktop 3-Column SOC Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 240px minmax(500px, 2fr) 240px;
+            gap: 20px;
+            align-items: start;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .sidebar-panel {
+            background: rgba(10, 25, 47, 0.7);
+            border: 1px solid var(--border-light, #00f3ff33);
+            border-radius: 8px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .content-area {
+            width: 100%;
+        }
+
+        /* Responsive Mobile View (Screens 1024px and below) */
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr; /* Stack into a single column */
+                gap: 15px;
+                padding: 0 10px;
+            }
+            
+            /* Put the Center Scanner first on mobile */
+            .content-area {
+                order: 1; 
+            }
+            
+            /* Put sidebars below the scanner on mobile */
+            .left-sidebar {
+                order: 2;
+            }
+            
+            .right-sidebar {
+                order: 3;
+            }
+        }
+    </style>
+
+    <div class="header" style="text-align: center; margin-bottom: 25px;">
         <h1>Phishing URL Risk Analyzer</h1>
         <p class="subtitle">Detect suspicious links using ML, Heuristics, and Threat Intelligence.</p>
     </div>
 
-    <!-- 3-Column SOC Layout Container with Wider Center -->
-    <div class="main-layout" style="display: grid; grid-template-columns: 240px minmax(600px, 2fr) 240px; gap: 20px; align-items: start; max-width: 1500px; margin: 0 auto; padding: 0 20px;">
+    <!-- Responsive SOC Layout Container -->
+    <div class="main-layout">
         
         <!-- LEFT SIDEBAR: Real System Telemetry -->
-        <aside class="sidebar-panel" style="background: rgba(10, 25, 47, 0.7); border: 1px solid var(--border-light, #00f3ff33); border-radius: 8px; padding: 20px; backdrop-filter: blur(10px);">
+        <aside class="sidebar-panel left-sidebar">
             <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid var(--border-light, #00f3ff33); padding-bottom: 8px; margin-top: 0;">[SYS] Telemetry</h3>
             <ul style="list-style: none; padding: 0; margin: 15px 0 0 0; font-family: monospace; font-size: 0.9em; line-height: 1.8;">
                 <li><span style="color: #00ff66;">●</span> API Gateway: <strong style="color: #fff;">{{ api_gateway_status }}</strong></li>
@@ -24,8 +72,8 @@
             </div>
         </aside>
 
-        <!-- CENTER CONTENT AREA: Scanner & Results (Wider) -->
-        <div class="content-area" style="width: 100%;">
+        <!-- CENTER CONTENT AREA: Scanner & Results -->
+        <div class="content-area">
             <section class="input-card" style="position: relative; overflow: hidden;">
                 <!-- Cyberpunk Laser Scan Animation -->
                 <div id="laser-scanner" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #00f3ff; box-shadow: 0 0 15px #00f3ff; transform: translateY(-10px); transition: transform 1.5s ease-in-out; opacity: 0; z-index: 10;"></div>
@@ -68,14 +116,14 @@
         </div>
 
         <!-- RIGHT SIDEBAR: Real Operational Metrics -->
-        <aside class="sidebar-panel" style="background: rgba(10, 25, 47, 0.7); border: 1px solid var(--border-light, #00f3ff33); border-radius: 8px; padding: 20px; backdrop-filter: blur(10px);">
+        <aside class="sidebar-panel right-sidebar">
             <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid var(--border-light, #00f3ff33); padding-bottom: 8px; margin-top: 0;">[METRICS] Feed</h3>
             <div style="margin-top: 15px; font-family: monospace; font-size: 0.9em;">
                 <p style="margin: 0 0 5px 0; color: var(--text); opacity: 0.8;">Total Scans Processed:</p>
-                <p style="margin: 0 0 15px 0; color: var(--neon); font-size: 1.3em; font-weight: bold;">{{ total_scans }}</p>
+                <p id="sidebar-total-scans" style="margin: 0 0 15px 0; color: var(--neon); font-size: 1.3em; font-weight: bold;">{{ total_scans }}</p>
                 
                 <p style="margin: 0 0 5px 0; color: var(--text); opacity: 0.8;">Threats Neutralized:</p>
-                <p style="margin: 0 0 15px 0; color: #ff003c; font-size: 1.3em; font-weight: bold;">{{ threats_detected }}</p>
+                <p id="sidebar-threats-detected" style="margin: 0 0 15px 0; color: #ff003c; font-size: 1.3em; font-weight: bold;">{{ threats_detected }}</p>
 
                 <p style="margin: 0 0 5px 0; color: var(--text); opacity: 0.8;">Engine State:</p>
                 <p style="margin: 0; color: #00ff66; font-size: 1.1em;">ACTIVE</p>
@@ -144,13 +192,22 @@
             if (data.error) { alert(data.error); return; }
 
             document.getElementById("result-card").classList.remove("hidden");
+
+            // Update sidebar metrics dynamically in real time
+            if (data.total_scans !== undefined) {
+                document.getElementById("sidebar-total-scans").innerText = data.total_scans;
+            }
+            if (data.threats_detected !== undefined) {
+                document.getElementById("sidebar-threats-detected").innerText = data.threats_detected;
+            }
+
             document.getElementById("risk-score").innerText = `SCORE: ${parseFloat(data.risk_score).toFixed(2)}/100`;
             document.getElementById("risk-bar").style.width = data.risk_score + "%";
             document.getElementById("risk-category").innerText = data.risk_category;
             document.getElementById("risk-category").className = "risk-label " + categoryToClass(data.risk_category);
             setRiskBarClass(data.risk_category);
 
-            // Render Threat Intelligence Grid (Matched with Python's verdict and detail keys)
+            // Render Threat Intelligence Grid
             const grid = document.getElementById("intel-grid");
             grid.innerHTML = ""; 
             if (data.intel_results && Array.isArray(data.intel_results) && data.intel_results.length > 0) {
