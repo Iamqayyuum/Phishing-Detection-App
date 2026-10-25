@@ -61,7 +61,6 @@
 
     let scanInterval;
 
-    // Maps the API response to your new Cyberpunk CSS classes
     function categoryToClass(category) {
         const c = (category || "").toLowerCase().trim();
         if (c === "safe" || c === "low risk") return "low-risk";
@@ -89,7 +88,6 @@
             return;
         }
 
-        // Lock UI and start animations
         analyzeBtn.disabled = true;
         btnText.classList.add("hidden");
         spinner.classList.remove("hidden");
@@ -117,40 +115,39 @@
             document.getElementById("risk-category").className = "risk-label " + categoryToClass(data.risk_category);
             setRiskBarClass(data.risk_category);
 
-            // Render Threat Intel Grid (Fixed mapping to match Python output)
+            // Render Threat Intelligence Grid (Matched with Python's verdict and detail keys)
             const grid = document.getElementById("intel-grid");
             grid.innerHTML = ""; 
             if (data.intel_results && Array.isArray(data.intel_results) && data.intel_results.length > 0) {
                 grid.innerHTML = data.intel_results.map(intel => {
-                    const statusClass = (intel.status || "neutral").toLowerCase();
+                    const verdictClass = (intel.verdict || "neutral").toLowerCase();
                     return `
-                    <div class="intel-card ${statusClass}">
+                    <div class="intel-card ${verdictClass}">
                         <div class="intel-header">
                             <strong>${intel.source || 'Unknown'}</strong>
-                            <span class="badge">${intel.status ? intel.status.toUpperCase() : 'N/A'}</span>
+                            <span class="badge">${intel.verdict ? intel.verdict.toUpperCase() : 'N/A'}</span>
                         </div>
-                        <p class="intel-detail">${intel.details || 'No details provided.'}</p>
+                        <p class="intel-detail">${intel.detail || 'No details provided.'}</p>
                     </div>
                 `}).join('');
             } else {
                 grid.innerHTML = '<p style="color:var(--text); opacity: 0.6; font-family: monospace;">[!] NO EXTERNAL INTELLIGENCE DATA AVAILABLE.</p>';
             }
 
-            // Render Findings List (Fixed to read data.findings)
+            // Render Findings List
             const reasonList = document.getElementById("reason-list");
             const findingsArray = data.findings || data.reasons || [];
             
             if (findingsArray.length > 0) {
                 reasonList.innerHTML = findingsArray.map(r => {
-                    let cssClass = "finding-item";
                     let parts = r.includes(":") ? r.split(":", 2) : ["Finding", r];
-                    return `<li class="${cssClass}"><strong style="color: var(--neon);">${parts[0]}:</strong> ${parts[1]}</li>`;
+                    return `<li><strong style="color: var(--neon);">${parts[0]}:</strong> ${parts[1]}</li>`;
                 }).join('');
             } else {
                 reasonList.innerHTML = `<li>No specific anomalies detected in this URL.</li>`;
             }
 
-            // Render Recommendations cleanly
+            // Render Recommendations
             const recContainer = document.getElementById("recommendation-text");
             const recData = data.recommendations || data.recommendation || "";
             
@@ -171,7 +168,6 @@
             console.error(err);
             alert("Analysis failed to complete. Check console logs."); 
         } finally { 
-            // Reset UI and stop animation
             analyzeBtn.disabled = false; 
             btnText.classList.remove("hidden"); 
             spinner.classList.add("hidden"); 
