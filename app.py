@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
@@ -34,8 +35,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # ==========================================
 # 📧 BREVO API CONFIGURATION
 # ==========================================
-BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "fallback_key_here")  # <-- Replace with your actual Brevo API Key
-SENDER_EMAIL = "amirqayyuum30@gmail.com"  # <-- Must be verified in your Brevo account
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "fallback_key_here")  # Securely read from environment variable
+SENDER_EMAIL = "amirqayyuum30@gmail.com"  # Verified Brevo sender email
 SENDER_NAME = "ThreatLink"
 
 # ==========================================
