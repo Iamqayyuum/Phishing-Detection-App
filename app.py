@@ -1,4 +1,5 @@
 import os
+import whois  # <-- Added for Domain Age Intelligence
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
@@ -162,25 +163,57 @@ def defang_url(url):
     return url.replace("https://", "hxxps://").replace("http://", "hxxp://").replace(".", "[.]")
 
 def analyze_url_anatomy(url):
-    """Breaks down URL into anatomy components and tags flags."""
+    """Breaks down URL into anatomy components, calculates domain age, and tags flags."""
     from urllib.parse import urlparse
     parsed = urlparse(url)
+    domain = parsed.hostname or ''
     
     flags = []
-    if re.match(r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$', parsed.hostname or ''):
+    if re.match(r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$', domain):
         flags.append("IP Address used instead of Domain")
-    if 'xn--' in (parsed.hostname or ''):
+    if 'xn--' in domain:
         flags.append("Punycode detected (IDN homograph risk)")
-    if len((parsed.hostname or '').split('.')) > 4:
+    if len(domain.split('.')) > 4:
         flags.append("Excessive subdomains")
     if len(url) > 75:
         flags.append("Unusually long URL string")
         
+    # --- WHOIS DOMAIN AGE CHECK ---
+    domain_age_str = "Unknown / Hidden"
+    
+    # We skip WHOIS for raw IP addresses to avoid query errors
+    if not re.match(r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$', domain) and domain:
+        try:
+            w = whois.whois(domain)
+            creation_date = w.creation_date
+            
+            if creation_date:
+                # Some registrars return a list of dates; grab the first one
+                if isinstance(creation_date, list):
+                    creation_date = creation_date[0]
+                
+                if isinstance(creation_date, datetime):
+                    # Convert to timezone-naive to prevent subtraction errors
+                    naive_creation = creation_date.replace(tzinfo=None)
+                    naive_now = datetime.now().replace(tzinfo=None)
+                    
+                    age_days = (naive_now - naive_creation).days
+                    domain_age_str = f"{age_days} Days"
+                    
+                    # 🚩 Flag if the domain is dangerously new (under 30 days)
+                    if age_days < 30:
+                        flags.append(f"Newly Registered Domain (Only {age_days} days old)")
+        except Exception as e:
+            domain_age_str = "Lookup Failed/Timeout"
+            logging.warning(f"WHOIS lookup failed for {domain}: {e}")
+    # ------------------------------
+        
     return {
         "protocol": parsed.scheme.upper() or "HTTPS",
-        "domain": parsed.hostname or "N/A",
+        "domain": domain or "N/A",
         "path": parsed.path or "/",
         "query": parsed.query or "None",
+        "domain_age": domain_age_str,  # <-- Added domain age to response payload
         "flags": flags if flags else ["Standard structural pattern"]
     }
 
