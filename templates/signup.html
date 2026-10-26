@@ -21,9 +21,12 @@
         <div class="input-card">
             <form method="POST" action="{{ url_for('signup') }}" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
                 
-                <input type="text" name="username" placeholder="Choose a Username" required autocomplete="off" style="width: 100%;">
+                <input type="text" name="username" placeholder="Choose a Username" required autocomplete="off" style="width: 100%; margin-bottom: 12px;">
                 
-                <div class="password-container">
+                <!-- Added Email Input Field -->
+                <input type="email" name="email" placeholder="Enter your Email Address" required autocomplete="off" style="width: 100%; margin-bottom: 12px;">
+
+                <div class="password-container" style="width: 100%; margin-bottom: 12px;">
                     <input type="password" name="password" id="password-input" placeholder="Choose a Password (8+ chars, letters & numbers)" required autocomplete="off">
                     <button type="button" id="toggle-password" class="eye-btn" aria-label="Toggle password visibility">
                         <svg id="eye-icon" viewBox="0 0 24 24">
@@ -33,7 +36,7 @@
                     </button>
                 </div>
                 
-                <button type="submit" id="analyze-btn">Create Account</button>
+                <button type="submit" id="analyze-btn" style="width: 100%;">Create Account</button>
             </form>
             
             <p style="text-align: center; margin-top: 25px; color: var(--text); font-weight: 600; font-size: 0.9em;">

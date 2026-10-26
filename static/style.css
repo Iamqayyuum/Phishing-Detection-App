@@ -230,7 +230,7 @@ body::before {
 /* ==========================================================================
    FORMS, INPUTS & BUTTONS
    ========================================================================== */
-input[type="text"], input[type="password"] { 
+input[type="text"], input[type="password"], input[type="email"] { 
     width: 100%; 
     padding: 14px; 
     border-radius: 4px; 
@@ -245,11 +245,11 @@ input[type="text"], input[type="password"] {
     transition: all 0.3s ease;
 }
 
-input[type="text"]::placeholder, input[type="password"]::placeholder {
+input[type="text"]::placeholder, input[type="password"]::placeholder, input[type="email"]::placeholder {
     color: rgba(0, 243, 255, 0.3);
 }
 
-input[type="text"]:focus, input[type="password"]:focus {
+input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
     border-color: var(--neon);
     box-shadow: 0 0 15px rgba(0, 243, 255, 0.3); 
 }
@@ -411,7 +411,7 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .intel-detail { 
-    font-size: 1rem; /* Adjust size if you want it larger, e.g., 1rem or 1.05em */
+    font-size: 1rem; 
     color: var(--text); 
     margin: 0; 
     line-height: 1.5; 

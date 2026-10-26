@@ -6,14 +6,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import logging
 import joblib
 import uuid
+import requests
+from datetime import datetime, timezone, timedelta
 
 # 🛡️ SECURITY & EXPORT MODULES
 import re
 import csv
-from datetime import datetime
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import pandas as pd
+
+# 📧 EMAIL VERIFICATION MODULES (ITSDANGEROUS)
+from itsdangerous import URLSafeTimedSerializer
 
 from core.url_processor import normalize_url, is_valid_url, expand_short_url
 from core.feature_extractor import extract_features
@@ -26,6 +30,18 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mmu-fyp-super-secret-key-2026' 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///phishing_system.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# ==========================================
+# 📧 BREVO API CONFIGURATION
+# ==========================================
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "fallback_key_here")  # <-- Replace with your actual Brevo API Key
+SENDER_EMAIL = "amirqayyuum30@gmail.com"  # <-- Must be verified in your Brevo account
+SENDER_NAME = "ThreatLink"
+
+# ==========================================
+# ⏰ TIMEZONE CONFIGURATION (MALAYSIA UTC+8)
+# ==========================================
+MY_TIMEZONE = timezone(timedelta(hours=8))
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -55,7 +71,9 @@ except Exception as e:
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
+    is_verified = db.Column(db.Boolean, default=False)
     scans = db.relationship('ScanHistory', backref='author', lazy=True)
 
 class ScanHistory(db.Model):
@@ -81,8 +99,63 @@ def load_user(user_id):
 logging.basicConfig(level=logging.INFO)
 
 # ==========================================
-# HELPER FUNCTIONS FOR ADVANCED METRICS
+# HELPER FUNCTIONS FOR TOKENS & METRICS
 # ==========================================
+def generate_verification_token(email):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt='email-verification-salt')
+
+def confirm_verification_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    try:
+        email = serializer.loads(
+            token,
+            salt='email-verification-salt',
+            max_age=expiration
+        )
+    except Exception:
+        return False
+    return email
+
+def send_verification_email(to_email, username, verify_url):
+    """Sends verification email via Brevo HTTP API (bypasses SMTP/firewall blocks)"""
+    try:
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers={
+                "accept": "application/json",
+                "api-key": BREVO_API_KEY,
+                "content-type": "application/json"
+            },
+            json={
+                "sender": {
+                    "name": SENDER_NAME,
+                    "email": SENDER_EMAIL
+                },
+                "to": [
+                    {
+                        "email": to_email,
+                        "name": username
+                    }
+                ],
+                "subject": "Verify Your Email - ThreatLink Phishing Risk Analyzer",
+                "htmlContent": f"""
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background-color: #f9f9f9; border-radius: 8px;">
+                    <h2 style="color: #0f172a;">Welcome to ThreatLink, {username}!</h2>
+                    <p>Thank you for registering. Please click the button below to verify your email address and activate your account:</p>
+                    <a href="{verify_url}" style="display: inline-block; padding: 12px 24px; background-color: #06b6d4; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 6px; margin-top: 15px;">Verify Email Address</a>
+                    <p style="margin-top: 25px; font-size: 0.85em; color: #64748b;">If you did not request this, please ignore this email. This verification link will expire in 1 hour.</p>
+                </div>
+                """
+            }
+        )
+        if response.status_code in [200, 201]:
+            return True, None
+        else:
+            return False, response.json().get('message', 'Unknown Brevo API error')
+    except Exception as e:
+        return False, str(e)
+
 def defang_url(url):
     """Converts a URL into a safe defanged format (e.g. hxxps://s4w[.]in/...)"""
     return url.replace("https://", "hxxps://").replace("http://", "hxxp://").replace(".", "[.]")
@@ -132,11 +205,17 @@ def about():
 def signup():
     if request.method == 'POST':
         username = request.form.get('username')
+        email = request.form.get('email')
         password = request.form.get('password')
         
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
             flash("Oops! That username is already taken. Please try another one.")
+            return redirect(url_for('signup'))
+            
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email:
+            flash("Oops! That email address is already registered.")
             return redirect(url_for('signup'))
             
         password_pattern = re.compile(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$')
@@ -145,12 +224,50 @@ def signup():
             return redirect(url_for('signup'))
             
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        new_user = User(username=username, password_hash=hashed_password)
+        new_user = User(username=username, email=email, password_hash=hashed_password, is_verified=False)
         db.session.add(new_user)
         db.session.commit()
+        
+        # Generate verification token and link
+        token = generate_verification_token(email)
+        verify_url = url_for('verify_email', token=token, _external=True)
+        
+        # 🛡️ BACKUP TERMINAL PRINT (GUARANTEES YOU NEVER GET LOCKED OUT FOR TESTING)
+        print(f"\n[DEBUG - VERIFICATION LINK FOR {email}]:\n{verify_url}\n")
+        
+        # Send via Brevo HTTP API
+        success, error_msg = send_verification_email(email, username, verify_url)
+        
+        if success:
+            flash('Registration successful! Please check your inbox to verify your account before logging in.')
+        else:
+            flash(f'Account created, but email delivery failed: {error_msg}. Check terminal for direct link.')
+            print(f"\n[BREVO API ERROR]: {error_msg}\n")
+
         return redirect(url_for('login'))
         
     return render_template('signup.html')
+
+@app.route('/verify/<token>')
+def verify_email(token):
+    email = confirm_verification_token(token)
+    if not email:
+        flash('The verification link is invalid or has expired.')
+        return redirect(url_for('login'))
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash('User not found.')
+        return redirect(url_for('login'))
+
+    if user.is_verified:
+        flash('Account already verified. Please log in.')
+    else:
+        user.is_verified = True
+        db.session.commit()
+        flash('Email verified successfully! You can now log in.')
+    
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -160,6 +277,9 @@ def login():
         user = User.query.filter_by(username=username).first()
         
         if user and check_password_hash(user.password_hash, password):
+            if not user.is_verified:
+                flash("Please verify your email address before logging in. Check your inbox for the link.")
+                return redirect(url_for('login'))
             login_user(user) 
             return redirect(url_for('home'))
         else:
@@ -218,7 +338,7 @@ def submit_feedback():
         scan_uuid=data['scan_uuid'],
         url=data.get('url', ''),
         feedback_type=data['feedback_type'],
-        timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        timestamp=datetime.now(MY_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
     )
     db.session.add(new_fb)
     db.session.commit()
@@ -253,7 +373,7 @@ def analyze():
     TRUSTED_DOMAINS = {"google.com", "youtube.com", "facebook.com", "apple.com", "microsoft.com", "github.com", "mmu.edu.my"}
 
     scan_uuid = str(uuid.uuid4())
-    timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    timestamp_str = datetime.now(MY_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
 
     if parsed_domain in TRUSTED_DOMAINS:
         intel_results = query_threat_intelligence(target_url)
