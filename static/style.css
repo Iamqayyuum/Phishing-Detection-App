@@ -411,11 +411,10 @@ input[type="text"]:focus, input[type="password"]:focus {
 }
 
 .intel-detail { 
-    font-size: 0.95rem; 
+    font-size: 1rem; /* Adjust size if you want it larger, e.g., 1rem or 1.05em */
     color: var(--text); 
     margin: 0; 
-    line-height: 1.4; 
-    font-family: monospace;
+    line-height: 1.5; 
 }
 
 .reasons ul { 

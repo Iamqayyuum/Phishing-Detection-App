@@ -2,7 +2,6 @@
 
 {% block content %}
     <style>
-        /* Default Desktop 3-Column SOC Layout */
         .main-layout {
             display: grid;
             grid-template-columns: 240px minmax(500px, 2fr) 240px;
@@ -12,7 +11,6 @@
             margin: 0 auto;
             padding: 0 20px;
         }
-
         .sidebar-panel {
             background: rgba(10, 25, 47, 0.7);
             border: 1px solid var(--border-light, #00f3ff33);
@@ -20,119 +18,268 @@
             padding: 20px;
             backdrop-filter: blur(10px);
         }
+        .content-area { width: 100%; }
 
-        .content-area {
-            width: 100%;
+        .loader-steps {
+            font-size: 0.95em;
+            color: var(--neon, #00f3ff);
+            margin-top: 15px;
+            text-align: left;
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid var(--neon);
+        }
+        .loader-step-item { opacity: 0.4; transition: opacity 0.3s; margin-bottom: 4px; }
+        .loader-step-item.active { opacity: 1; font-weight: bold; text-shadow: 0 0 8px rgba(0,243,255,0.4); }
+
+        .soc-section-title {
+            color: var(--neon, #00f3ff);
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            padding-bottom: 6px;
+            margin: 20px 0 10px 0;
+            font-weight: 700;
         }
 
-        /* Responsive Mobile View (Screens 1024px and below) */
+        .finding-high { border-left: 3px solid #ff003c; background: rgba(255, 0, 60, 0.05); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 0.95em; }
+        .finding-medium { border-left: 3px solid #ffaa00; background: rgba(255, 170, 0, 0.05); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 0.95em; }
+        .finding-safe { border-left: 3px solid #00ff66; background: rgba(0, 255, 102, 0.05); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 0.95em; }
+
+        /* Cyberpunk Data Table with Inherited Rajdhani Font */
+        .ml-telemetry-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            font-size: 0.95em;
+            font-family: inherit;
+        }
+        .ml-telemetry-table th, .ml-telemetry-table td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.1);
+            font-family: inherit;
+        }
+        .ml-telemetry-table th {
+            color: var(--neon);
+            background: rgba(0, 243, 255, 0.05);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .ml-telemetry-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .feature-bar-bg { 
+            background: rgba(0, 0, 0, 0.7); 
+            border: 1px solid rgba(0, 243, 255, 0.15); 
+            border-radius: 3px; 
+            height: 6px; 
+            width: 100%; 
+            overflow: hidden; 
+            position: relative;
+        }
+
+        .feature-bar-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, #00f3ff, #ff003c); 
+            border-radius: 3px; 
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+        }
+
+        /* Responsive Threat Intel Grid */
+        .intel-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .intel-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 6px;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .intel-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+        }
+        .intel-card.clean::before { background: #00ff66; box-shadow: 0 0 8px #00ff66; }
+        .intel-card.malicious::before { background: #ff003c; box-shadow: 0 0 8px #ff003c; }
+        .intel-card.suspicious::before { background: #ffaa00; box-shadow: 0 0 8px #ffaa00; }
+        .intel-card.error::before, .intel-card.unknown::before { background: #888; }
+
+        .intel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+            font-weight: 700;
+        }
+
+        .intel-detail {
+            font-size: 0.95em;
+            opacity: 0.85;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border: 1px solid;
+            text-transform: uppercase;
+        }
+        .intel-card.clean .badge { color: #00ff66; border-color: #00ff66; background: rgba(0, 255, 102, 0.1); }
+        .intel-card.malicious .badge { color: #ff003c; border-color: #ff003c; background: rgba(255, 0, 60, 0.1); }
+        .intel-card.suspicious .badge { color: #ffaa00; border-color: #ffaa00; background: rgba(255, 170, 0, 0.1); }
+        .intel-card.error .badge, .intel-card.unknown .badge { color: #fff; border-color: #fff; background: rgba(255, 255, 255, 0.1); }
+
         @media (max-width: 1024px) {
-            .main-layout {
-                grid-template-columns: 1fr; /* Stack into a single column */
-                gap: 15px;
-                padding: 0 10px;
-            }
-            
-            /* Put the Center Scanner first on mobile */
-            .content-area {
-                order: 1; 
-            }
-            
-            /* Put sidebars below the scanner on mobile */
-            .left-sidebar {
-                order: 2;
-            }
-            
-            .right-sidebar {
-                order: 3;
-            }
+            .main-layout { grid-template-columns: 1fr; gap: 15px; padding: 0 10px; }
+            .content-area { order: 1; }
+            .left-sidebar { order: 2; }
+            .right-sidebar { order: 3; }
+        }
+
+        @media (max-width: 768px) {
+            .intel-grid { grid-template-columns: 1fr; }
         }
     </style>
 
     <div class="header" style="text-align: center; margin-bottom: 25px;">
-        <h1>Phishing URL Risk Analyzer</h1>
-        <p class="subtitle">Detect suspicious links using ML, Heuristics, and Threat Intelligence.</p>
+        <h1>PHISHING URL RISK ANALYZER</h1>
+        <p class="subtitle">DETECT SUSPICIOUS LINKS USING ML, HEURISTICS, AND THREAT INTELLIGENCE.</p>
     </div>
 
-    <!-- Responsive SOC Layout Container -->
     <div class="main-layout">
-        
-        <!-- LEFT SIDEBAR: Real System Telemetry -->
         <aside class="sidebar-panel left-sidebar">
-            <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid var(--border-light, #00f3ff33); padding-bottom: 8px; margin-top: 0;">[SYS] Telemetry</h3>
-            <ul style="list-style: none; padding: 0; margin: 15px 0 0 0; font-family: monospace; font-size: 0.9em; line-height: 1.8;">
+            <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid var(--border-light, #00f3ff33); padding-bottom: 8px; margin-top: 0; font-weight: 700;">[SYS] Telemetry</h3>
+            <ul style="list-style: none; padding: 0; margin: 15px 0 0 0; font-size: 0.95em; line-height: 1.8;">
                 <li><span style="color: #00ff66;">●</span> API Gateway: <strong style="color: #fff;">{{ api_gateway_status }}</strong></li>
-                <li><span style="color: #00ff66;">●</span> Random Forest: <strong style="color: #fff;">{{ ml_status }}</strong></li>
+                <li><span style="color: #00ff66;">●</span> XGBoost: <strong style="color: #fff;">{{ ml_status }}</strong></li>
                 <li><span style="color: #00ff66;">●</span> OpenPhish Feed: <strong style="color: #fff;">{{ openphish_status }}</strong></li>
-                <li><span style="color: #00ff66;">●</span> Google Web Risk: <strong style="color: #fff;">{{ google_web_risk_status }}</strong></li>
-                <li><span style="color: var(--neon);">●</span> Protocol: <strong style="color: #fff;">HTTPS/TLS</strong></li>
             </ul>
-            <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--border-light, #00f3ff33);">
-                <p style="font-size: 0.8em; color: var(--text); opacity: 0.7; margin: 0;">Defense-in-depth engine active. Monitoring lexical anomalies and threat feeds in real-time.</p>
-            </div>
         </aside>
 
-        <!-- CENTER CONTENT AREA: Scanner & Results -->
         <div class="content-area">
             <section class="input-card" style="position: relative; overflow: hidden;">
-                <!-- Cyberpunk Laser Scan Animation -->
                 <div id="laser-scanner" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #00f3ff; box-shadow: 0 0 15px #00f3ff; transform: translateY(-10px); transition: transform 1.5s ease-in-out; opacity: 0; z-index: 10;"></div>
                 
                 <form id="analyze-form" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
                     <input type="text" id="url-input" placeholder="> Enter a website URL to scan..." required autocomplete="off" style="width: 100%;">
                     
-                    <button type="submit" id="analyze-btn">
-                        <span id="btn-text">Initiate Scan</span>
+                    <button type="submit" id="analyze-btn" style="width: 100%; margin-top: 10px;">
+                        <span id="btn-text">INITIATE SCAN</span>
                         <div id="spinner" class="spinner hidden"></div>
                     </button>
                 </form>
+
+                <div id="loader-box" class="loader-steps hidden">
+                    <div id="step-1" class="loader-step-item">[1/4] Normalizing URL & expanding shortener hops...</div>
+                    <div id="step-2" class="loader-step-item">[2/4] Querying OpenPhish & Threat Intelligence APIs...</div>
+                    <div id="step-3" class="loader-step-item">[3/4] Running XGBoost ML inference engine...</div>
+                    <div id="step-4" class="loader-step-item">[4/4] Compiling risk scores and SOC telemetry...</div>
+                </div>
             </section>
 
-            <section id="result-card" class="result-card hidden">
-                <div class="risk-indicator">
+            <section id="result-card" class="result-card hidden" style="background: rgba(10, 25, 47, 0.85); border: 1px solid var(--border-light, #00f3ff33); border-radius: 8px; padding: 25px; margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.9em; opacity: 0.8; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 15px;">
+                    <span>SCAN ID: <strong id="meta-scan-id" style="color: var(--neon);">---</strong></span>
+                    <span>TIMESTAMP: <strong id="meta-timestamp">---</strong></span>
+                </div>
+
+                <div class="risk-indicator" style="display: flex; justify-content: space-between; align-items: center;">
                     <span id="risk-category" class="risk-label"></span>
-                    <span id="risk-score" style="color: var(--neon); text-shadow: 0 0 10px rgba(0,243,255,0.3);"></span>
+                    <span id="risk-score" style="color: var(--neon); text-shadow: 0 0 10px rgba(0,243,255,0.3); font-size: 1.2em; font-weight: 700;"></span>
                 </div>
 
-                <div class="risk-bar-container">
-                    <div id="risk-bar"></div>
+                <div class="risk-bar-container" style="margin: 15px 0;">
+                    <div id="risk-bar" style="height: 6px; border-radius: 3px; transition: width 0.5s;"></div>
                 </div>
 
-                <div class="intel-section">
-                    <h3>Threat Intelligence Status</h3>
-                    <div id="intel-grid" class="intel-grid"></div>
+                <div class="soc-section-title">[INFO] Score Breakdown</div>
+                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(0,243,255,0.1); font-size: 0.95em;">
+                    <ul style="margin: 0; padding-left: 18px; line-height: 1.6;">
+                        <li>ML Classifier Probability: <span id="breakdown-ml" style="color: #fff;"></span>%</li>
+                        <li>Heuristic Anomaly Weight: <span id="breakdown-heuristic" style="color: #fff;"></span> pts</li>
+                        <li>Threat Intelligence Hits: <span id="breakdown-intel" style="color: #fff;"></span> match(es)</li>
+                        <li>Safety Status Override: <em id="breakdown-override" style="color: #00ff66;">None</em></li>
+                    </ul>
                 </div>
 
-                <div class="reasons">
-                    <h3>Findings</h3>
-                    <ul id="reason-list"></ul>
+                <div class="soc-section-title">Shortener & Redirect Resolution Chain</div>
+                <div id="redirect-chain-box" style="background: rgba(0,0,0,0.3); padding: 10px 12px; border-radius: 6px; border: 1px solid rgba(0,243,255,0.1); font-size: 0.95em; color: #fff;"></div>
+
+                <div class="soc-section-title">URL Anatomy & Structural Flags</div>
+                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(0,243,255,0.1); font-size: 0.95em; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div>Protocol: <strong id="anatomy-protocol" style="color: #fff;"></strong></div>
+                    <div>Domain: <strong id="anatomy-domain" style="color: #fff;"></strong></div>
+                    <div style="grid-column: span 2;">Path: <strong id="anatomy-path" style="color: #fff;"></strong></div>
+                    <div style="grid-column: span 2;">Flags: <span id="anatomy-flags" style="color: #ffaa00;"></span></div>
                 </div>
 
-                <div class="recommendation">
-                    <h3>Recommended Action</h3>
-                    <div id="recommendation-text" class="text-content"></div>
+                <div class="soc-section-title">Top ML Prediction Drivers (Explainability)</div>
+                <div id="ml-explainability-container" style="margin-top: 10px;"></div>
+
+                <div class="soc-section-title" style="margin-top: 25px;">Threat Intelligence Status</div>
+                <p style="font-size: 0.85em; opacity: 0.75; margin-bottom: 10px;">*Note: 0 vendors flagged on VirusTotal does not guarantee safety if heuristics or OpenPhish indicate zero-day phishing indicators.</p>
+                <div id="intel-grid" class="intel-grid"></div>
+
+                <div class="soc-section-title" style="margin-top: 25px;">Findings</div>
+                <div id="reason-list" style="margin-top: 8px;"></div>
+
+                <div class="soc-section-title" style="margin-top: 25px;">Recommended Action</div>
+                <div id="recommendation-text" class="text-content" style="background: rgba(0,0,0,0.3); padding: 14px 16px; border-radius: 6px; border: 1px solid rgba(0,243,255,0.1); font-size: 0.95em; line-height: 1.6;"></div>
+
+                <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed rgba(0,243,255,0.2); display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" id="copy-defanged-btn" style="background: rgba(0,243,255,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: 700;">📋 Copy Defanged URL</button>
+                        <button type="button" id="export-json-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: 700;">📥 Export JSON</button>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" id="report-phish-btn" style="background: rgba(255,0,60,0.15); border: 1px solid #ff003c; color: #ff003c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: 700;">🚨 Report as Phishing</button>
+                        <button type="button" id="wrong-result-btn" style="background: rgba(255,170,0,0.15); border: 1px solid #ffaa00; color: #ffaa00; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: 700;">⚠️ Result Looks Wrong</button>
+                    </div>
                 </div>
             </section>
         </div>
 
-        <!-- RIGHT SIDEBAR: Real Operational Metrics -->
         <aside class="sidebar-panel right-sidebar">
-            <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid var(--border-light, #00f3ff33); padding-bottom: 8px; margin-top: 0;">[METRICS] Feed</h3>
-            <div style="margin-top: 15px; font-family: monospace; font-size: 0.9em;">
-                <p style="margin: 0 0 5px 0; color: var(--text); opacity: 0.8;">Total Scans Processed:</p>
-                <p id="sidebar-total-scans" style="margin: 0 0 15px 0; color: var(--neon); font-size: 1.3em; font-weight: bold;">{{ total_scans }}</p>
+            <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid var(--border-light, #00f3ff33); padding-bottom: 8px; margin-top: 0; font-weight: 700;">[METRICS] Feed</h3>
+            <div style="margin-top: 15px; font-size: 0.95em;">
+                <p style="margin: 0 0 5px 0; opacity: 0.8;">Total Scans:</p>
+                <p id="sidebar-total-scans" style="margin: 0 0 15px 0; color: var(--neon); font-size: 1.3em; font-weight: 700;">{{ total_scans }}</p>
                 
-                <p style="margin: 0 0 5px 0; color: var(--text); opacity: 0.8;">Threats Neutralized:</p>
-                <p id="sidebar-threats-detected" style="margin: 0 0 15px 0; color: #ff003c; font-size: 1.3em; font-weight: bold;">{{ threats_detected }}</p>
+                <p style="margin: 0 0 5px 0; opacity: 0.8;">Threats Neutralized:</p>
+                <p id="sidebar-threats-detected" style="margin: 0 0 15px 0; color: #ff003c; font-size: 1.3em; font-weight: 700;">{{ threats_detected }}</p>
 
-                <p style="margin: 0 0 5px 0; color: var(--text); opacity: 0.8;">Engine State:</p>
-                <p style="margin: 0; color: #00ff66; font-size: 1.1em;">ACTIVE</p>
-            </div>
-            <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--border-light, #00f3ff33);">
-                <span style="display: inline-block; background: rgba(0,243,255,0.1); color: var(--neon); padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-family: monospace;">SECURE MODE v2.1</span>
+                <p style="margin: 0 0 5px 0; opacity: 0.8;">Engine State:</p>
+                <p style="margin: 0; color: #00ff66; font-weight: 700;">ACTIVE</p>
             </div>
         </aside>
-
     </div>
 
     <script>
@@ -142,8 +289,10 @@
     const btnText = document.getElementById("btn-text");
     const spinner = document.getElementById("spinner");
     const laserScanner = document.getElementById("laser-scanner");
+    const loaderBox = document.getElementById("loader-box");
 
-    let scanInterval;
+    let activeScanUuid = null;
+    let currentScannedUrl = null;
 
     function categoryToClass(category) {
         const c = (category || "").toLowerCase().trim();
@@ -153,32 +302,32 @@
         return "medium-risk"; 
     }
 
-    function setRiskBarClass(category) {
-        const bar = document.getElementById("risk-bar");
-        bar.classList.remove("bar-low", "bar-medium", "bar-high");
-        const c = (category || "").toLowerCase().trim();
-        if (c === "safe" || c === "low risk") bar.classList.add("bar-low");
-        else if (c === "malicious" || c === "high risk") bar.classList.add("bar-high");
-        else bar.classList.add("bar-medium");
-    }
-
     analyzeForm.onsubmit = async (e) => {
         e.preventDefault();
         const url = urlInput.value.trim();
-
-        const urlRegex = /^(https?:\/\/)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:[0-9]{1,3}\.){3}[0-9]{1,3})(:[0-9]+)?(\/.*)?$/;
-        if (!urlRegex.test(url)) {
-            alert("Invalid format! Please enter a valid web address.");
-            return;
-        }
+        currentScannedUrl = url;
 
         analyzeBtn.disabled = true;
         btnText.classList.add("hidden");
         spinner.classList.remove("hidden");
+        loaderBox.classList.remove("hidden");
         
+        const steps = [document.getElementById("step-1"), document.getElementById("step-2"), document.getElementById("step-3"), document.getElementById("step-4")];
+        steps.forEach(s => s.classList.remove("active"));
+        
+        let stepIdx = 0;
+        steps[stepIdx].classList.add("active");
+        const stepInterval = setInterval(() => {
+            stepIdx++;
+            if(stepIdx < steps.length) {
+                steps.forEach(s => s.classList.remove("active"));
+                steps[stepIdx].classList.add("active");
+            }
+        }, 400);
+
         laserScanner.style.opacity = "1";
         let moveDown = true;
-        scanInterval = setInterval(() => {
+        let scanInterval = setInterval(() => {
             laserScanner.style.transform = moveDown ? "translateY(70px)" : "translateY(-10px)";
             moveDown = !moveDown;
         }, 1500);
@@ -189,25 +338,76 @@
             const resp = await fetch("/analyze", { method: "POST", body: formData });
             const data = await resp.json();
 
+            clearInterval(stepInterval);
+            loaderBox.classList.add("hidden");
+
             if (data.error) { alert(data.error); return; }
 
+            activeScanUuid = data.scan_id;
             document.getElementById("result-card").classList.remove("hidden");
 
-            // Update sidebar metrics dynamically in real time
-            if (data.total_scans !== undefined) {
-                document.getElementById("sidebar-total-scans").innerText = data.total_scans;
-            }
-            if (data.threats_detected !== undefined) {
-                document.getElementById("sidebar-threats-detected").innerText = data.threats_detected;
-            }
+            document.getElementById("meta-scan-id").innerText = data.scan_id;
+            document.getElementById("meta-timestamp").innerText = data.timestamp;
+
+            if (data.total_scans !== undefined) document.getElementById("sidebar-total-scans").innerText = data.total_scans;
+            if (data.threats_detected !== undefined) document.getElementById("sidebar-threats-detected").innerText = data.threats_detected;
 
             document.getElementById("risk-score").innerText = `SCORE: ${parseFloat(data.risk_score).toFixed(2)}/100`;
             document.getElementById("risk-bar").style.width = data.risk_score + "%";
+            document.getElementById("risk-bar").style.background = data.risk_score > 70 ? "#ff003c" : data.risk_score > 30 ? "#ffaa00" : "#00ff66";
             document.getElementById("risk-category").innerText = data.risk_category;
             document.getElementById("risk-category").className = "risk-label " + categoryToClass(data.risk_category);
-            setRiskBarClass(data.risk_category);
 
-            // Render Threat Intelligence Grid
+            if (data.score_breakdown) {
+                document.getElementById("breakdown-ml").innerText = data.score_breakdown.ml_probability;
+                document.getElementById("breakdown-heuristic").innerText = data.score_breakdown.heuristic_score;
+                document.getElementById("breakdown-intel").innerText = data.score_breakdown.threat_intel_match;
+                document.getElementById("breakdown-override").innerText = data.score_breakdown.safety_override;
+            }
+
+            const chainBox = document.getElementById("redirect-chain-box");
+            if (data.redirect_chain && data.redirect_chain.length > 0) {
+                chainBox.innerHTML = data.redirect_chain.map((hop, idx) => `<div>Hop ${idx + 1}: <span style="color: var(--neon);">${hop}</span></div>`).join('');
+            } else {
+                chainBox.innerText = "Direct connection (No redirects/shorteners detected)";
+            }
+
+            if (data.anatomy) {
+                document.getElementById("anatomy-protocol").innerText = data.anatomy.protocol;
+                document.getElementById("anatomy-domain").innerText = data.anatomy.domain;
+                document.getElementById("anatomy-path").innerText = data.anatomy.path;
+                document.getElementById("anatomy-flags").innerText = data.anatomy.flags.join(', ');
+            }
+
+            const explContainer = document.getElementById("ml-explainability-container");
+            explContainer.innerHTML = "";
+            if (data.top_features && data.top_features.length > 0) {
+                explContainer.innerHTML = `
+                    <table class="ml-telemetry-table">
+                        <thead>
+                            <tr>
+                                <th>Feature Metric</th>
+                                <th style="width: 120px;">Impact Weight</th>
+                                <th style="width: 35%;">Distribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.top_features.map(f => `
+                                <tr>
+                                    <td>${f.feature}</td>
+                                    <td style="font-family: inherit; color: var(--neon); font-weight: 700;">${f.impact}%</td>
+                                    <td>
+                                        <div class="feature-bar-bg">
+                                            <div class="feature-bar-fill" style="width: ${f.impact}%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
             const grid = document.getElementById("intel-grid");
             grid.innerHTML = ""; 
             if (data.intel_results && Array.isArray(data.intel_results) && data.intel_results.length > 0) {
@@ -222,42 +422,47 @@
                         <p class="intel-detail">${intel.detail || 'No details provided.'}</p>
                     </div>
                 `}).join('');
-            } else {
-                grid.innerHTML = '<p style="color:var(--text); opacity: 0.6; font-family: monospace;">[!] NO EXTERNAL INTELLIGENCE DATA AVAILABLE.</p>';
             }
 
-            // Render Findings List
             const reasonList = document.getElementById("reason-list");
-            const findingsArray = data.findings || data.reasons || [];
-            
+            const findingsArray = data.findings || [];
             if (findingsArray.length > 0) {
                 reasonList.innerHTML = findingsArray.map(r => {
-                    let parts = r.includes(":") ? r.split(":", 2) : ["Finding", r];
-                    return `<li><strong style="color: var(--neon);">${parts[0]}:</strong> ${parts[1]}</li>`;
+                    const isThreat = r.toLowerCase().includes('malicious') || r.toLowerCase().includes('match') || r.toLowerCase().includes('high risk');
+                    const cssClass = isThreat ? "finding-high" : "finding-safe";
+                    return `<div class="${cssClass}">• ${r}</div>`;
                 }).join('');
-            } else {
-                reasonList.innerHTML = `<li>No specific anomalies detected in this URL.</li>`;
             }
 
-            // Render Recommendations
             const recContainer = document.getElementById("recommendation-text");
-            const recData = data.recommendations || data.recommendation || "";
-            
+            const recData = data.recommendations || "";
             if (Array.isArray(recData)) {
-                recContainer.innerHTML = `<ul style="list-style-type: none; padding-left: 0; margin-top: 10px;">` + 
-                    recData.map(item => {
-                        let parts = item.split(":");
-                        if (parts.length > 1) {
-                            return `<li style="margin-bottom: 10px; border-left: 2px solid var(--neon); padding-left: 10px;"><strong style="color:var(--neon);">${parts[0]}:</strong>${parts.slice(1).join(":")}</li>`;
-                        }
-                        return `<li style="margin-bottom: 10px; border-left: 2px solid var(--neon); padding-left: 10px;">${item}</li>`;
-                    }).join('') + `</ul>`;
+                recContainer.innerHTML = recData.map(r => `<div style="margin-bottom: 8px;">• ${r}</div>`).join('');
             } else {
-                recContainer.innerText = recData;
+                // Automatically breaks apart actions onto new lines with highlighted titles
+                let formattedText = recData
+                    .replace(/(Immediate Action:|Verification:|Reporting:|Action:)/g, '<br><strong style="color: var(--neon);">$1</strong>')
+                    .replace(/^(<br>)+/, ''); // Clean up any leading breaks
+                recContainer.innerHTML = formattedText;
             }
+
+            document.getElementById("copy-defanged-btn").onclick = () => {
+                navigator.clipboard.writeText(data.defanged_url);
+                alert(`Copied defanged URL to clipboard:\n${data.defanged_url}`);
+            };
+
+            document.getElementById("export-json-btn").onclick = () => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                const urlObj = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = urlObj;
+                a.download = `scan_report_${data.scan_id}.json`;
+                a.click();
+            };
 
         } catch (err) { 
             console.error(err);
+            loaderBox.classList.add("hidden");
             alert("Analysis failed to complete. Check console logs."); 
         } finally { 
             analyzeBtn.disabled = false; 
@@ -268,5 +473,20 @@
             laserScanner.style.transform = "translateY(-10px)";
         }
     };
+
+    async function sendFeedback(type) {
+        if (!activeScanUuid) { alert("Please perform a scan first."); return; }
+        const resp = await fetch("/feedback", {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ scan_uuid: activeScanUuid, url: currentScannedUrl, feedback_type: type })
+        });
+        const res = await resp.json();
+        if (res.success) alert("Thank you! Feedback successfully logged for model evaluation and retraining.");
+        else alert("Failed to log feedback.");
+    }
+
+    document.getElementById("report-phish-btn").onclick = () => sendFeedback("phishing_report");
+    document.getElementById("wrong-result-btn").onclick = () => sendFeedback("false_positive");
     </script>
 {% endblock %}
