@@ -5,23 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phishing URL Risk Analyzer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Custom Navbar Button Colors */
+        .nav-btn-history {
+            border-color: #ffaa00 !important;
+            color: #ffaa00 !important;
+            background: rgba(255, 170, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .nav-btn-history:hover {
+            background: rgba(255, 170, 0, 0.25);
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.4);
+        }
+
+        .nav-btn-logout {
+            border-color: #ff003c !important;
+            color: #ff003c !important;
+            background: rgba(255, 0, 60, 0.1);
+            transition: all 0.3s ease;
+        }
+        .nav-btn-logout:hover {
+            background: rgba(255, 0, 60, 0.25);
+            box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
-        {% if current_user.is_authenticated %}
+        {% if current_user.is_authenticated or session.get('is_admin') %}
             <div class="user-profile">
-                <div class="avatar">{{ current_user.username[0]|upper }}</div>
-                <span class="greeting">Hello, <strong>{{ current_user.username }}</strong></span>
+                <div class="avatar">{{ (current_user.username if current_user.is_authenticated else 'Admin')[0]|upper }}</div>
+                <span class="greeting">Hello, <strong>{{ current_user.username if current_user.is_authenticated else 'Admin' }}</strong></span>
             </div>
             
-            <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
-            <a href="{{ url_for('history') }}" class="btn-outline">History</a>
-            <a href="{{ url_for('logout') }}" class="btn-outline">Logout</a>
-            <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
-            <a href="{{ url_for('about') }}" class="btn-outline">About</a>   
+            <!-- Hide Scanner, History, and About when viewing as Admin -->
+            {% if not session.get('is_admin') and not (current_user.is_authenticated and current_user.is_admin) %}
+                <!-- Only show Scanner button if NOT currently on the home page -->
+                {% if request.endpoint != 'home' %}
+                    <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
+                {% endif %}
+                <a href="{{ url_for('history') }}" class="btn-outline nav-btn-history">History</a>
+                <a href="{{ url_for('about') }}" class="btn-outline">About</a>   
+            {% endif %}
+
+            <a href="{{ url_for('admin_logout' if session.get('is_admin') else 'logout') }}" class="btn-outline nav-btn-logout">Logout</a>
         {% else %}
             <a href="{{ url_for('login') }}" class="btn-outline">Login</a>
-            <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
+            {% if request.endpoint != 'home' %}
+                <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
+            {% endif %}
             <a href="{{ url_for('about') }}" class="btn-outline">About</a>       
         {% endif %}
     </nav>

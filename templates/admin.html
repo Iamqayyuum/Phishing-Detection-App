@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <style>
+        /* 🛡️ Circuit Board Background Canvas */
+        #circuit-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -3;
+            pointer-events: none;
+            background-color: #050b14;
+        }
+
+        .admin-container {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+            padding-bottom: 15px;
+        }
+        .metric-card {
+            background: rgba(10, 25, 47, 0.85);
+            border: 1px solid var(--border-light, #00f3ff33);
+            border-radius: 8px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--neon);
+            box-shadow: 0 0 8px var(--neon);
+        }
+        .export-btn {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--neon, #00f3ff);
+            color: var(--neon, #00f3ff);
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .export-btn:hover {
+            background: rgba(0, 243, 255, 0.25);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+            color: #ffffff;
+        }
+
+        /* 🛡️ Cyberpunk Animations */
+        @keyframes neonPulse {
+            0% { opacity: 0.7; text-shadow: 0 0 5px rgba(0, 255, 102, 0.2); }
+            50% { opacity: 1; text-shadow: 0 0 15px rgba(0, 255, 102, 0.9), 0 0 25px rgba(0, 255, 102, 0.5); }
+            100% { opacity: 0.7; text-shadow: 0 0 5px rgba(0, 255, 102, 0.2); }
+        }
+
+        .pulsing-status {
+            animation: neonPulse 2s infinite ease-in-out;
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .admin-animate-in {
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+    </style>
+
+    <!-- Circuit Background Canvas -->
+    <canvas id="circuit-canvas"></canvas>
+
+    <div class="admin-container">
+        <div class="admin-header admin-animate-in delay-1">
+            <div>
+                <h1 style="color: var(--neon); margin: 0; font-size: 1.8em; letter-spacing: 1px;">SOC ADMIN CONTROL PANEL</h1>
+                <p style="margin: 5px 0 0 0; opacity: 0.7; font-size: 0.95em;">System Telemetry, Scan Audit Logs, and User Feedback Monitoring</p>
+            </div>
+        </div>
+
+        <!-- Metric Cards: Side by side in a single row -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;" class="admin-animate-in delay-2">
+            <div class="metric-card">
+                <p style="margin: 0; opacity: 0.8; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px;">Total Scans Recorded</p>
+                <h2 style="color: var(--neon); margin: 8px 0 0 0; font-size: 2.2em; text-shadow: 0 0 10px rgba(0,243,255,0.3);">{{ total_scans }}</h2>
+            </div>
+            <div class="metric-card" style="border-left-color: #ff003c;">
+                <div style="content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 3px; background: #ff003c; box-shadow: 0 0 8px #ff003c;"></div>
+                <p style="margin: 0; opacity: 0.8; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px;">Threats Neutralized</p>
+                <h2 style="color: #ff003c; margin: 8px 0 0 0; font-size: 2.2em; text-shadow: 0 0 10px rgba(255,0,60,0.3);">{{ threats_detected }}</h2>
+            </div>
+            <div class="metric-card" style="border-left-color: #00ff66;">
+                <div style="content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 3px; background: #00ff66; box-shadow: 0 0 8px #00ff66;"></div>
+                <p style="margin: 0; opacity: 0.8; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px;">Engine Status</p>
+                <h2 class="pulsing-status" style="color: #00ff66; margin: 8px 0 0 0; font-size: 2.2em;">ACTIVE</h2>
+            </div>
+        </div>
+
+        <!-- Recent Scans Table -->
+        <div class="sidebar-panel admin-animate-in delay-3" style="background: rgba(10, 25, 47, 0.85); margin-bottom: 30px; padding: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 class="soc-section-title" style="margin: 0;">[AUDIT] Recent Target Scans</h3>
+                <a href="{{ url_for('export_scans_csv') }}" class="export-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Export Scans CSV
+                </a>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="ml-telemetry-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Scan ID</th>
+                            <th>Timestamp</th>
+                            <th>Target URL</th>
+                            <th>Risk Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_scans %}
+                            {% for scan in recent_scans %}
+                            <tr>
+                                <td style="font-family: monospace; color: var(--neon);">{{ scan.scan_uuid[:8] }}...</td>
+                                <td>{{ scan.timestamp }}</td>
+                                <td style="word-break: break-all; max-width: 450px;">{{ scan.url_scanned }}</td>
+                                <td style="font-weight: 700;">{{ scan.risk_score }}/100</td>
+                                <td>
+                                    {% set status_lower = scan.status | lower %}
+                                    {% if 'malicious' in status_lower or 'high' in status_lower %}
+                                        <span class="badge" style="background: rgba(255,0,60,0.15); border-color: #ff003c; color: #ff003c;">
+                                            {{ scan.status }}
+                                        </span>
+                                    {% elif 'suspicious' in status_lower or 'medium' in status_lower %}
+                                        <span class="badge" style="background: rgba(255,170,0,0.15); border-color: #ffaa00; color: #ffaa00;">
+                                            {{ scan.status }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge" style="background: rgba(0,255,102,0.15); border-color: #00ff66; color: #00ff66;">
+                                            {{ scan.status }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="5" style="text-align: center; opacity: 0.6; padding: 25px;">No scan logs recorded yet.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- User Feedback / False Positive Reports -->
+        <div class="sidebar-panel admin-animate-in delay-4" style="background: rgba(10, 25, 47, 0.85); margin-bottom: 30px; padding: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 class="soc-section-title" style="margin: 0;">[FEEDBACK] User Reports & False Positives</h3>
+                <a href="{{ url_for('export_feedback_csv') }}" class="export-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Export Feedback CSV
+                </a>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="ml-telemetry-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Scan UUID</th>
+                            <th>Reported URL</th>
+                            <th>Feedback Type</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if feedback_entries %}
+                            {% for fb in feedback_entries %}
+                            <tr>
+                                <td>{{ fb.timestamp }}</td>
+                                <td style="font-family: monospace; opacity: 0.8;">{{ fb.scan_uuid[:8] }}...</td>
+                                <td style="word-break: break-all; max-width: 350px;">{{ fb.url }}</td>
+                                <td><span class="badge" style="color: #ffaa00; border-color: #ffaa00; background: rgba(255,170,0,0.1);">{{ fb.feedback_type }}</span></td>
+                                <td>
+                                    {% if fb.status == 'Resolved' %}
+                                        <span class="badge" style="background: rgba(0,255,102,0.15); border-color: #00ff66; color: #00ff66;">Resolved</span>
+                                    {% else %}
+                                        <span class="badge" style="background: rgba(255,0,60,0.15); border-color: #ff003c; color: #ff003c;">{{ fb.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if fb.status != 'Resolved' %}
+                                    <form action="{{ url_for('resolve_feedback', fb_id=fb.id) }}" method="POST" style="margin: 0;">
+                                        <button type="submit" class="export-btn" style="padding: 3px 8px; font-size: 0.75em;">Resolve</button>
+                                    </form>
+                                    {% else %}
+                                    <span style="opacity: 0.5; font-size: 0.85em;">Closed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="6" style="text-align: center; opacity: 0.6; padding: 25px;">No user feedback submitted yet.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Registered Users Management Table -->
+        <div class="sidebar-panel admin-animate-in delay-4" style="background: rgba(10, 25, 47, 0.85); padding: 25px; margin-bottom: 40px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 class="soc-section-title" style="margin: 0;">[USERS] Registered System Accounts</h3>
+                <span style="font-size: 0.85em; opacity: 0.7;">Total Accounts: {{ total_users }}</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="ml-telemetry-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Verification Status</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if all_users %}
+                            {% for u in all_users %}
+                            <tr>
+                                <td style="font-family: monospace; color: var(--neon);">#{{ u.id }}</td>
+                                ><td>{{ u.username }}</td>
+                                <td>{{ u.email }}</td>
+                                <td>
+                                    {% if u.is_verified %}
+                                        <span class="badge" style="background: rgba(0,255,102,0.15); border-color: #00ff66; color: #00ff66;">Verified</span>
+                                    {% else %}
+                                        <span class="badge" style="background: rgba(255,170,0,0.15); border-color: #ffaa00; color: #ffaa00;">Unverified</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if u.is_admin %}
+                                        <span class="badge" style="background: rgba(0,243,255,0.15); border-color: var(--neon); color: var(--neon);">Admin</span>
+                                    {% else %}
+                                        <span class="badge" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); color: #fff;">Standard User</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="5" style="text-align: center; opacity: 0.6; padding: 25px;">No users registered yet.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Circuit Trace Animation Script -->
+    <script>
+        const canvas = document.getElementById('circuit-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class CircuitNode {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.length = Math.floor(Math.random() * 5) + 4; // Number of turns
+                this.path = [{x: this.x, y: this.y}];
+                this.dir = Math.floor(Math.random() * 4); // 0: up, 1: right, 2: down, 3: left
+                this.stepSize = 40;
+                this.currentStep = 0;
+                this.speed = Math.random() * 0.8 + 0.4;
+                this.progress = 0;
+                this.alpha = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.progress += this.speed;
+                if (this.progress >= this.stepSize) {
+                    this.progress = 0;
+                    this.currentStep++;
+
+                    // Pick new orthogonal direction (snake turn)
+                    if (Math.random() < 0.4) {
+                        this.dir = (this.dir + (Math.random() < 0.5 ? 1 : 3)) % 4;
+                    }
+
+                    let last = this.path[this.path.length - 1];
+                    let nx = last.x, ny = last.y;
+                    if (this.dir === 0) ny -= this.stepSize;
+                    else if (this.dir === 1) nx += this.stepSize;
+                    else if (this.dir === 2) ny += this.stepSize;
+                    else if (this.dir === 3) nx -= this.stepSize;
+
+                    // Keep inside screen bounds
+                    if (nx < 0 || nx > canvas.width || ny < 0 || ny > canvas.height) {
+                        this.reset();
+                        return;
+                    }
+
+                    this.path.push({x: nx, y: ny});
+                    if (this.path.length > this.length) {
+                        this.path.shift();
+                    }
+                }
+            }
+            draw() {
+                if (this.path.length < 2) return;
+                ctx.beginPath();
+                ctx.moveTo(this.path[0].x, this.path[0].y);
+                for (let i = 1; i < this.path.length; i++) {
+                    ctx.lineTo(this.path[i].x, this.path[i].y);
+                }
+                ctx.strokeStyle = `rgba(0, 243, 255, ${this.alpha})`;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Draw glowing node head (snake head)
+                let head = this.path[this.path.length - 1];
+                ctx.beginPath();
+                ctx.arc(head.x, head.y, 2.5, 0, Math.PI * 2);
+                ctx.fillStyle = '#00ff66';
+                ctx.shadowColor = '#00f3ff';
+                ctx.shadowBlur = 8;
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset
+            }
+        }
+
+        // Create multiple circuit snakes
+        const snakes = [];
+        for (let i = 0; i < 25; i++) {
+            snakes.push(new CircuitNode());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw subtle static grid dots
+            ctx.fillStyle = 'rgba(0, 243, 255, 0.04)';
+            for (let x = 0; x < canvas.width; x += 60) {
+                for (let y = 0; y < canvas.height; y += 60) {
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+
+            snakes.forEach(snake => {
+                snake.update();
+                snake.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+{% endblock %}

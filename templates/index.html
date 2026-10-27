@@ -2,6 +2,18 @@
 
 {% block content %}
     <style>
+        /* 🛡️ Electric Blue Binary Matrix Background Canvas */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -3;
+            pointer-events: none;
+            background: radial-gradient(circle at center, #07162c 0%, #030813 100%);
+        }
+
         .main-layout {
             display: grid;
             grid-template-columns: 240px minmax(500px, 2fr) 240px;
@@ -10,13 +22,16 @@
             max-width: 1500px;
             margin: 0 auto;
             padding: 0 20px;
+            position: relative;
+            z-index: 1;
         }
         .sidebar-panel {
-            background: rgba(10, 25, 47, 0.7);
+            background: rgba(10, 25, 47, 0.85);
             border: 1px solid var(--border-light, #00f3ff33);
             border-radius: 8px;
             padding: 20px;
             backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
         .content-area { width: 100%; }
 
@@ -28,7 +43,7 @@
             background: rgba(0,0,0,0.3);
             padding: 12px;
             border-radius: 6px;
-            border-left: 3px solid var(--neon);
+            border-left: 3px solid var(--neon, #00f3ff);
         }
         .loader-step-item { opacity: 0.4; transition: opacity 0.3s; margin-bottom: 4px; }
         .loader-step-item.active { opacity: 1; font-weight: bold; text-shadow: 0 0 8px rgba(0,243,255,0.4); }
@@ -48,7 +63,7 @@
         .finding-medium { border-left: 3px solid #ffaa00; background: rgba(255, 170, 0, 0.05); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 0.95em; }
         .finding-safe { border-left: 3px solid #00ff66; background: rgba(0, 255, 102, 0.05); padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 0.95em; }
 
-        /* Cyberpunk Data Table with Inherited Rajdhani Font */
+        /* Cyberpunk Data Table */
         .ml-telemetry-table {
             width: 100%;
             border-collapse: collapse;
@@ -66,7 +81,7 @@
             font-family: inherit;
         }
         .ml-telemetry-table th {
-            color: var(--neon);
+            color: var(--neon, #00f3ff);
             background: rgba(0, 243, 255, 0.05);
             font-weight: 700;
             letter-spacing: 0.5px;
@@ -156,6 +171,21 @@
         .intel-card.suspicious .badge { color: #ffaa00; border-color: #ffaa00; background: rgba(255, 170, 0, 0.1); }
         .intel-card.error .badge, .intel-card.unknown .badge { color: #fff; border-color: #fff; background: rgba(255, 255, 255, 0.1); }
 
+        /* 🛡️ Smooth Entry Animation */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in {
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+
         @media (max-width: 1024px) {
             .main-layout { grid-template-columns: 1fr; gap: 15px; padding: 0 10px; }
             .content-area { order: 1; }
@@ -168,14 +198,17 @@
         }
     </style>
 
-    <div class="header" style="text-align: center; margin-bottom: 25px;">
-        <h1>PHISHING URL RISK ANALYZER</h1>
-        <p class="subtitle">DETECT SUSPICIOUS LINKS USING ML, HEURISTICS, AND THREAT INTELLIGENCE.</p>
+    <!-- Electric Blue Binary Matrix Canvas Background -->
+    <canvas id="matrix-canvas"></canvas>
+
+    <div class="header animate-in delay-1" style="text-align: center; margin-bottom: 25px; position: relative; z-index: 1;">
+        <h1 style="color: var(--neon, #00f3ff); text-shadow: 0 0 15px rgba(0,243,255,0.4);">PHISHING URL RISK ANALYZER</h1>
+        <p class="subtitle" style="color: #a1d1ff;">DETECT SUSPICIOUS LINKS USING ML, HEURISTICS, AND THREAT INTELLIGENCE.</p>
     </div>
 
     <div class="main-layout">
-        <aside class="sidebar-panel left-sidebar">
-            <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid var(--border-light, #00f3ff33); padding-bottom: 8px; margin-top: 0; font-weight: 700;">[SYS] Telemetry</h3>
+        <aside class="sidebar-panel left-sidebar animate-in delay-2">
+            <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid rgba(0,243,255,0.2); padding-bottom: 8px; margin-top: 0; font-weight: 700;">[SYS] Telemetry</h3>
             <ul style="list-style: none; padding: 0; margin: 15px 0 0 0; font-size: 0.95em; line-height: 1.8;">
                 <li><span style="color: #00ff66;">●</span> API Gateway: <strong style="color: #fff;">{{ api_gateway_status }}</strong></li>
                 <li><span style="color: #00ff66;">●</span> XGBoost: <strong style="color: #fff;">{{ ml_status }}</strong></li>
@@ -183,14 +216,14 @@
             </ul>
         </aside>
 
-        <div class="content-area">
-            <section class="input-card" style="position: relative; overflow: hidden;">
-                <div id="laser-scanner" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #00f3ff; box-shadow: 0 0 15px #00f3ff; transform: translateY(-10px); transition: transform 1.5s ease-in-out; opacity: 0; z-index: 10;"></div>
+        <div class="content-area animate-in delay-2">
+            <section class="input-card" style="position: relative; overflow: hidden; background: rgba(10, 25, 47, 0.85); border: 1px solid var(--border-light, #00f3ff33); border-radius: 8px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                <div id="laser-scanner" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--neon, #00f3ff); box-shadow: 0 0 15px #00f3ff; transform: translateY(-10px); transition: transform 1.5s ease-in-out; opacity: 0; z-index: 10;"></div>
                 
                 <form id="analyze-form" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-                    <input type="text" id="url-input" placeholder="> Enter a website URL to scan..." required autocomplete="off" style="width: 100%;">
+                    <input type="text" id="url-input" placeholder="> Enter a website URL to scan..." required autocomplete="off" style="width: 100%; background: rgba(5, 15, 30, 0.9); border: 1px solid rgba(0,243,255,0.3); color: #fff; padding: 12px 15px; border-radius: 4px; outline: none;">
                     
-                    <button type="submit" id="analyze-btn" style="width: 100%; margin-top: 10px;">
+                    <button type="submit" id="analyze-btn" style="width: 100%; margin-top: 12px; background: rgba(0,243,255,0.15); border: 1px solid var(--neon, #00f3ff); color: var(--neon, #00f3ff); padding: 12px; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase;">
                         <span id="btn-text">INITIATE SCAN</span>
                         <div id="spinner" class="spinner hidden"></div>
                     </button>
@@ -204,15 +237,15 @@
                 </div>
             </section>
 
-            <section id="result-card" class="result-card hidden" style="background: rgba(10, 25, 47, 0.85); border: 1px solid var(--border-light, #00f3ff33); border-radius: 8px; padding: 25px; margin-top: 20px;">
+            <section id="result-card" class="result-card hidden" style="background: rgba(10, 25, 47, 0.85); border: 1px solid var(--border-light, #00f3ff33); border-radius: 8px; padding: 25px; margin-top: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
                 <div style="display: flex; justify-content: space-between; font-size: 0.9em; opacity: 0.8; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 15px;">
-                    <span>SCAN ID: <strong id="meta-scan-id" style="color: var(--neon);">---</strong></span>
+                    <span>SCAN ID: <strong id="meta-scan-id" style="color: var(--neon, #00f3ff);">---</strong></span>
                     <span>TIMESTAMP: <strong id="meta-timestamp">---</strong></span>
                 </div>
 
                 <div class="risk-indicator" style="display: flex; justify-content: space-between; align-items: center;">
                     <span id="risk-category" class="risk-label"></span>
-                    <span id="risk-score" style="color: var(--neon); text-shadow: 0 0 10px rgba(0,243,255,0.3); font-size: 1.2em; font-weight: 700;"></span>
+                    <span id="risk-score" style="color: var(--neon, #00f3ff); text-shadow: 0 0 10px rgba(0,243,255,0.3); font-size: 1.2em; font-weight: 700;"></span>
                 </div>
 
                 <div class="risk-bar-container" style="margin: 15px 0;">
@@ -246,9 +279,10 @@
 
                 <!-- ASYNCHRONOUS AI BRIEFING SECTION WITH TIMEOUT SAFEGUARD -->
                 <div class="soc-section-title" style="margin-top: 25px;">AI Threat Intelligence Briefing</div>
-                <div id="ai-briefing-text" style="background: rgba(0,243,255,0.05); border-left: 3px solid var(--neon); padding: 12px 15px; border-radius: 4px; font-size: 0.95em; line-height: 1.6; color: #e2e8f0;"></div>
+                <div id="ai-briefing-text" style="background: rgba(0,243,255,0.05); border-left: 3px solid var(--neon, #00f3ff); padding: 12px 15px; border-radius: 4px; font-size: 0.95em; line-height: 1.6; color: #e2e8f0;"></div>
+                
                 <div class="soc-section-title" style="margin-top: 25px;">Threat Intelligence Status</div>
-                <p style="font-size: 0.85em; opacity: 0.75; margin-bottom: 10px;">*Note: 0 vendors flagged on VirusTotal does not guarantee safety if heuristics or OpenPhish indicate zero-day phishing indicators.</p>
+                <p style="font-size: 0.85em; opacity: 0.75; margin-bottom: 10px;">*Note: 0 vendors flagged does not guarantee safety if heuristics or OpenPhish indicate zero-day phishing indicators.</p>
                 <div id="intel-grid" class="intel-grid"></div>
 
                 <div class="soc-section-title" style="margin-top: 25px;">Findings</div>
@@ -262,7 +296,7 @@
 
                 <div style="padding-top: 15px; border-top: 1px dashed rgba(0,243,255,0.2); display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button type="button" id="copy-defanged-btn" style="background: rgba(0,243,255,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: 700;">📋 Copy Defanged URL</button>
+                        <button type="button" id="copy-defanged-btn" style="background: rgba(0,243,255,0.1); border: 1px solid var(--neon, #00f3ff); color: var(--neon, #00f3ff); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: 700;">📋 Copy Defanged URL</button>
                         <button type="button" id="export-json-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: 700;">📥 Export JSON</button>
                     </div>
 
@@ -274,20 +308,78 @@
             </section>
         </div>
 
-        <aside class="sidebar-panel right-sidebar">
-            <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid var(--border-light, #00f3ff33); padding-bottom: 8px; margin-top: 0; font-weight: 700;">[METRICS] Feed</h3>
+        <aside class="sidebar-panel right-sidebar animate-in delay-3">
+            <h3 style="color: var(--neon, #00f3ff); font-size: 1.1em; border-bottom: 1px solid rgba(0,243,255,0.2); padding-bottom: 8px; margin-top: 0; font-weight: 700;">[METRICS] Feed</h3>
             <div style="margin-top: 15px; font-size: 0.95em;">
-                <p style="margin: 0 0 5px 0; opacity: 0.8;">Total Scans:</p>
-                <p id="sidebar-total-scans" style="margin: 0 0 15px 0; color: var(--neon); font-size: 1.3em; font-weight: 700;">{{ total_scans }}</p>
+                <p style="margin: 0 0 5px 0; opacity: 0.8; color: #a1d1ff;">Total Scans:</p>
+                <p id="sidebar-total-scans" style="margin: 0 0 15px 0; color: var(--neon, #00f3ff); font-size: 1.3em; font-weight: 700;">{{ total_scans }}</p>
                 
-                <p style="margin: 0 0 5px 0; opacity: 0.8;">Threats Neutralized:</p>
+                <p style="margin: 0 0 5px 0; opacity: 0.8; color: #a1d1ff;">Threats Neutralized:</p>
                 <p id="sidebar-threats-detected" style="margin: 0 0 15px 0; color: #ff003c; font-size: 1.3em; font-weight: 700;">{{ threats_detected }}</p>
 
-                <p style="margin: 0 0 5px 0; opacity: 0.8;">Engine State:</p>
+                <p style="margin: 0 0 5px 0; opacity: 0.8; color: #a1d1ff;">Engine State:</p>
                 <p style="margin: 0; color: #00ff66; font-weight: 700;">ACTIVE</p>
             </div>
         </aside>
     </div>
+
+    <!-- Slow Electric Blue Binary Matrix Rain Animation Script -->
+    <script>
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const fontSize = 14;
+        const columns = Math.floor(canvas.width / fontSize);
+        const drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.floor(Math.random() * -100);
+        }
+
+        const chars = '01010101010101010101010101010101';
+        let lastTime = 0;
+        const fps = 24; // Lower FPS slows down the frame updates smoothly
+        const interval = 1000 / fps;
+
+        function drawMatrix(currentTime) {
+            requestAnimationFrame(drawMatrix);
+
+            const delta = currentTime - lastTime;
+            if (delta < interval) return;
+            lastTime = currentTime - (delta % interval);
+
+            ctx.fillStyle = 'rgba(7, 15, 30, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00f3ff';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                const x = i * fontSize;
+                const y = drops[i] * fontSize;
+
+                ctx.fillStyle = Math.random() > 0.85 ? '#ffffff' : '#00f3ff';
+                ctx.shadowColor = '#00f3ff';
+                ctx.shadowBlur = 6;
+                ctx.fillText(text, x, y);
+                ctx.shadowBlur = 0;
+
+                if (y > canvas.height && Math.random() > 0.98) {
+                    drops[i] = 0;
+                }
+                // Slower drop step increment
+                drops[i] += 0.5; 
+            }
+        }
+        requestAnimationFrame(drawMatrix);
+    </script>
 
     <script>
     const analyzeForm = document.getElementById("analyze-form");
@@ -374,7 +466,7 @@
 
             const chainBox = document.getElementById("redirect-chain-box");
             if (data.redirect_chain && data.redirect_chain.length > 0) {
-                chainBox.innerHTML = data.redirect_chain.map((hop, idx) => `<div>Hop ${idx + 1}: <span style="color: var(--neon);">${hop}</span></div>`).join('');
+                chainBox.innerHTML = data.redirect_chain.map((hop, idx) => `<div>Hop ${idx + 1}: <span style="color: var(--neon, #00f3ff);">${hop}</span></div>`).join('');
             } else {
                 chainBox.innerText = "Direct connection (No redirects/shorteners detected)";
             }
@@ -403,7 +495,7 @@
                             ${data.top_features.map(f => `
                                 <tr>
                                     <td>${f.feature}</td>
-                                    <td style="font-family: inherit; color: var(--neon); font-weight: 700;">${f.impact}%</td>
+                                    <td style="font-family: inherit; color: var(--neon, #00f3ff); font-weight: 700;">${f.impact}%</td>
                                     <td>
                                         <div class="feature-bar-bg">
                                             <div class="feature-bar-fill" style="width: ${f.impact}%;"></div>
@@ -489,7 +581,7 @@
                 recContainer.innerHTML = recData.map(r => `<div style="margin-bottom: 8px;">• ${r}</div>`).join('');
             } else {
                 let formattedText = recData
-                    .replace(/(Immediate Action:|Verification:|Reporting:|Action:)/g, '<br><strong style="color: var(--neon);">$1</strong>')
+                    .replace(/(Immediate Action:|Verification:|Reporting:|Action:)/g, '<br><strong style="color: var(--neon, #00f3ff);">$1</strong>')
                     .replace(/^(<br>)+/, '');
                 recContainer.innerHTML = formattedText;
             }

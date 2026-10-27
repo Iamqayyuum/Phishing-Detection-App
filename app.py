@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()  # Safely loads your secret keys from the .env file
 
 import whois
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, abort, session, make_response, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from flask_login import UserMixin, LoginManager, login_user, current_user, logout_user, login_required
@@ -14,6 +14,7 @@ import uuid
 import requests
 from datetime import datetime, timezone, timedelta
 from functools import wraps
+from io import StringIO
 
 # 🛡️ SECURITY, EXPORT & AI MODULES
 import re
@@ -237,71 +238,90 @@ def generate_ai_threat_briefing(url, risk_score, risk_category, anatomy, intel_r
         return "AI Threat Intelligence Briefing temporarily unavailable."
 
 # ==========================================
-# ADMIN ROUTES & DECORATORS
+# ADMIN ROUTES, CONTROL PANEL & EXPORTS
 # ==========================================
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not getattr(current_user, 'is_admin', False):
-            abort(403)
-        return f(*args, **kwargs)
-    return decorated_function
-
 @app.route('/admin')
-@login_required
-@admin_required
 def admin_dashboard():
+    if not session.get('is_admin') and not (current_user.is_authenticated and getattr(current_user, 'is_admin', False)):
+        return redirect(url_for('login'))
+    
     total_users = User.query.count()
     total_scans = ScanHistory.query.count()
+    threats_detected = ScanHistory.query.filter(ScanHistory.status.in_(['Malicious', 'High Risk'])).count()
     pending_feedback = FeedbackLog.query.filter_by(status='Pending').all()
     all_users = User.query.all()
     recent_scans = ScanHistory.query.order_by(ScanHistory.id.desc()).limit(50).all()
+    feedback_entries = FeedbackLog.query.order_by(FeedbackLog.id.desc()).limit(50).all()
     
     return render_template('admin.html', 
                            total_users=total_users, 
                            total_scans=total_scans, 
+                           threats_detected=threats_detected,
                            pending_feedback=pending_feedback, 
                            all_users=all_users,
-                           recent_scans=recent_scans)
+                           recent_scans=recent_scans,
+                           feedback_entries=feedback_entries)
 
-@app.route('/admin/resolve_feedback/<int:feedback_id>', methods=['POST'])
-@login_required
-@admin_required
-def resolve_feedback(feedback_id):
-    fb = FeedbackLog.query.get(feedback_id)
-    if fb:
-        fb.status = 'Resolved'
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('is_admin', None)
+    if current_user.is_authenticated:
+        logout_user()
+    return redirect(url_for('login'))
+
+@app.route('/admin/export/scans/csv')
+def export_scans_csv():
+    if not session.get('is_admin') and not (current_user.is_authenticated and getattr(current_user, 'is_admin', False)):
+        return redirect(url_for('login'))
+    
+    scans = ScanHistory.query.order_by(ScanHistory.id.desc()).all()
+    si = StringIO()
+    writer = csv.writer(si)
+    
+    writer.writerow(['Scan UUID', 'Timestamp', 'Target URL', 'Risk Score', 'Status', 'User ID'])
+    for s in scans:
+        writer.writerow([s.scan_uuid, s.timestamp, s.url_scanned, s.risk_score, s.status, s.user_id or 'Guest'])
+    
+    output = si.getvalue()
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=threatlink_scan_audit_logs.csv"}
+    )
+
+@app.route('/admin/export/feedback/csv')
+def export_feedback_csv():
+    if not session.get('is_admin') and not (current_user.is_authenticated and getattr(current_user, 'is_admin', False)):
+        return redirect(url_for('login'))
+    
+    feedbacks = FeedbackLog.query.order_by(FeedbackLog.id.desc()).all()
+    si = StringIO()
+    writer = csv.writer(si)
+    
+    writer.writerow(['Feedback ID', 'Scan UUID', 'Reported URL', 'Feedback Type', 'Status', 'Timestamp'])
+    for f in feedbacks:
+        writer.writerow([f.id, f.scan_uuid, f.url, f.feedback_type, f.status, f.timestamp])
+    
+    output = si.getvalue()
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=threatlink_user_feedback.csv"}
+    )
+
+@app.route('/admin/feedback/resolve/<int:fb_id>', methods=['POST'])
+def resolve_feedback(fb_id):
+    if not session.get('is_admin') and not (current_user.is_authenticated and getattr(current_user, 'is_admin', False)):
+        return redirect(url_for('login'))
+    
+    feedback = FeedbackLog.query.get(fb_id)
+    if feedback:
+        feedback.status = 'Resolved'
         db.session.commit()
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/toggle_user/<int:user_id>', methods=['POST'])
-@login_required
-@admin_required
-def toggle_user(user_id):
-    user = User.query.get(user_id)
-    if user and user.id != current_user.id:
-        user.is_verified = not user.is_verified
-        db.session.commit()
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/retrain_model', methods=['POST'])
-@login_required
-@admin_required
-def retrain_model():
-    try:
-        from train_model import retrain_phishing_model
-        success, message = retrain_phishing_model()
-    except ImportError:
-        success, message = False, "MLOps module (train_model.py) not found in system."
-        
-    if success:
-        flash(f"✅ {message}", "success")
-    else:
-        flash(f"❌ Retraining error: {message}", "error")
     return redirect(url_for('admin_dashboard'))
 
 # ==========================================
-# PUBLIC ROUTES
+# PUBLIC & USER ROUTES
 # ==========================================
 @app.route("/about")
 def about():
@@ -374,20 +394,38 @@ def login():
         password = request.form.get('password')
         user = User.query.filter_by(username=username).first()
         
+        env_admin = os.environ.get("ADMIN_USER", "admin")
+        env_pass = os.environ.get("ADMIN_PASS", "securepassword123")
+        
+        # Check environment admin login
+        if username == env_admin and password == env_pass:
+            session['is_admin'] = True
+            return redirect(url_for('admin_dashboard'))
+        
+        # Check database user login
         if user and check_password_hash(user.password_hash, password):
-            if not user.is_verified:
+            if not user.is_verified and not user.is_admin:
                 flash("Please verify your email address before logging in. Check your inbox for the link.")
                 return redirect(url_for('login'))
+            
             login_user(user) 
+            
+            # If database user is an admin, set admin session and route to admin dashboard
+            if getattr(user, 'is_admin', False):
+                session['is_admin'] = True
+                return redirect(url_for('admin_dashboard'))
+            
             return redirect(url_for('home'))
         else:
             flash("Invalid username or password. Please try again.")
             return redirect(url_for('login'))
+            
     return render_template('login.html')
 
 @app.route('/logout')
 @login_required 
 def logout():
+    session.pop('is_admin', None)
     logout_user()
     return redirect(url_for('home'))
 
@@ -418,6 +456,10 @@ def clear_history():
 
 @app.route("/")
 def home():
+    # Automatically redirect active admins to the control panel
+    if session.get('is_admin') or (current_user.is_authenticated and getattr(current_user, 'is_admin', False)):
+        return redirect(url_for('admin_dashboard'))
+
     total_scans = ScanHistory.query.count()
     threats_detected = ScanHistory.query.filter(ScanHistory.status.in_(['Malicious', 'High Risk'])).count()
     return render_template("index.html", total_scans=total_scans, threats_detected=threats_detected,
@@ -443,7 +485,6 @@ def submit_feedback():
 
 @app.route('/api/ai_briefing', methods=['POST'])
 def api_ai_briefing():
-    """Asynchronous endpoint to fetch the AI briefing separately to speed up scan loading."""
     data = request.get_json()
     if not data:
         return jsonify({"error": "No data provided"}), 400

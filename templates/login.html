@@ -1,16 +1,59 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="header">
-        <h1>System Access</h1>
-        <p class="subtitle">Log in to view your historical threat intelligence audits.</p>
+    <style>
+        /* 🛡️ Electric Blue Binary Matrix Background Canvas */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -3;
+            pointer-events: none;
+            background: radial-gradient(circle at center, #07162c 0%, #030813 100%);
+        }
+
+        .login-wrapper {
+            max-width: 500px;
+            margin: 40px auto;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        /* 🛡️ Smooth Entry Animation */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in {
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+    </style>
+
+    <!-- Electric Blue Binary Matrix Canvas Background -->
+    <canvas id="matrix-canvas"></canvas>
+
+    <div class="header animate-in delay-1">
+        <h1 style="color: var(--neon, #00f3ff); text-shadow: 0 0 15px rgba(0,243,255,0.4);">System Access</h1>
+        <p class="subtitle" style="color: #a1d1ff;">Log in to view your historical threat intelligence audits.</p>
     </div>
 
-    <div style="max-width: 500px; margin: 0 auto; width: 100%;">
-        
+    <div class="login-wrapper animate-in delay-2">
         {% with messages = get_flashed_messages() %}
             {% if messages %}
-                <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid #EF4444; color: #EF4444; padding: 10px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+                <div style="background-color: rgba(239, 68, 68, 0.15); border: 1px solid #EF4444; color: #EF4444; padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; font-weight: bold; backdrop-filter: blur(5px);">
                     {% for message in messages %}
                         {{ message }}
                     {% endfor %}
@@ -18,31 +61,87 @@
             {% endif %}
         {% endwith %}
 
-        <div class="input-card">
+        <div class="input-card" style="background: rgba(10, 25, 47, 0.85); border: 1px solid var(--border-light, #00f3ff33); border-radius: 8px; padding: 30px; backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
             <form method="POST" action="{{ url_for('login') }}" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
                 
-                <input type="text" name="username" placeholder="Username" required autocomplete="off" style="width: 100%;">
+                <input type="text" name="username" placeholder="Username" required autocomplete="off" style="width: 100%; margin-bottom: 15px;">
                 
-                <div class="password-container">
-                    <input type="password" name="password" id="password-input" placeholder="Password" required autocomplete="off">
+                <div class="password-container" style="width: 100%; margin-bottom: 20px;">
+                    <input type="password" name="password" id="password-input" placeholder="Password" required autocomplete="off" style="width: 100%;">
                     <button type="button" id="toggle-password" class="eye-btn" aria-label="Toggle password visibility">
-                        <svg id="eye-icon" viewBox="0 0 24 24">
+                        <svg id="eye-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                             <circle cx="12" cy="12" r="3"></circle>
                         </svg>
                     </button>
                 </div>
                 
-                <button type="submit" id="analyze-btn">Access Dashboard</button>
+                <button type="submit" id="analyze-btn" style="width: 100%;">Access Dashboard</button>
             </form>
             
-            <p style="text-align: center; margin-top: 25px; color: var(--text); font-weight: 600; font-size: 0.9em;">
-                No account? <a href="{{ url_for('signup') }}" style="color: var(--accent); text-decoration: none;">Create Audit Profile</a>
+            <p style="text-align: center; margin-top: 25px; color: #e2e8f0; font-weight: 600; font-size: 0.9em;">
+                No account? <a href="{{ url_for('signup') }}" style="color: var(--neon, #00f3ff); text-decoration: none;">Create Audit Profile</a>
             </p>
         </div>
     </div>
 
+    <!-- Slow Electric Blue Binary Matrix Rain Animation Script -->
     <script>
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const fontSize = 14;
+        const columns = Math.floor(canvas.width / fontSize);
+        const drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.floor(Math.random() * -100);
+        }
+
+        const chars = '01010101010101010101010101010101';
+        let lastTime = 0;
+        const fps = 24;
+        const interval = 1000 / fps;
+
+        function drawMatrix(currentTime) {
+            requestAnimationFrame(drawMatrix);
+
+            const delta = currentTime - lastTime;
+            if (delta < interval) return;
+            lastTime = currentTime - (delta % interval);
+
+            ctx.fillStyle = 'rgba(7, 15, 30, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00f3ff';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                const x = i * fontSize;
+                const y = drops[i] * fontSize;
+
+                ctx.fillStyle = Math.random() > 0.85 ? '#ffffff' : '#00f3ff';
+                ctx.shadowColor = '#00f3ff';
+                ctx.shadowBlur = 6;
+                ctx.fillText(text, x, y);
+                ctx.shadowBlur = 0;
+
+                if (y > canvas.height && Math.random() > 0.98) {
+                    drops[i] = 0;
+                }
+                drops[i] += 0.5; 
+            }
+        }
+        requestAnimationFrame(drawMatrix);
+
+        // Password Visibility Toggle Script
         const togglePassword = document.getElementById('toggle-password');
         const passwordInput = document.getElementById('password-input');
         const eyeIcon = document.getElementById('eye-icon');

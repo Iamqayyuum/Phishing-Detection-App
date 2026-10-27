@@ -1,103 +1,236 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="header">
-        <h1>Platform Overview</h1>
-        <p class="subtitle">Enterprise-Grade Hybrid Phishing Protection</p>
-    </div>
+    <style>
+        /* 🛡️ Electric Blue Binary Matrix Background Canvas */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -3;
+            pointer-events: none;
+            background: radial-gradient(circle at center, #07162c 0%, #030813 100%);
+        }
 
-    <div class="main-layout">
-        <div class="content-area">
-            
-            <!-- Mission Statement -->
-            <section class="result-card">
-                <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
-                    <h3 style="color: var(--neon); font-size: 1.5em; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">Our Mission</h3>
-                    <p style="color: var(--text); line-height: 1.6; font-size: 1.1em;">
-                        As cyber threat actors deploy automated, zero-day infrastructure faster than traditional blocklists can update, everyday users face unprecedented digital risks. This platform was engineered to democratize advanced cybersecurity, providing real-time, multi-layered threat analysis to protect individuals and organizations from sophisticated social engineering campaigns.
-                    </p>
-                </div>
-            </section>
+        .about-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
 
-            <!-- Defense-in-Depth Architecture -->
-            <section class="result-card" style="margin-top: -10px;">
-                <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
-                    <h3 style="color: var(--neon); font-size: 1.5em; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">Multi-Layered Detection Engine</h3>
-                    <p style="color: var(--text); line-height: 1.6; font-size: 1.1em; margin-bottom: 20px;">
-                        To achieve high accuracy and prevent false positives, our system employs a defense-in-depth architecture consisting of three core analysis pillars:
-                    </p>
-                    <ul style="color: var(--text); line-height: 1.6; font-size: 1.05em; margin-bottom: 20px;">
-                        <li style="margin-bottom: 15px;">
-                            <strong style="color: var(--neon);">1. Lexical & Heuristic Analysis:</strong> 
-                            The engine evaluates the structural properties of a URL—such as entropy rates, character anomalies, and obfuscation markers (e.g., deep-path masking and IP routing)—before any network request is made.
-                        </li>
-                        <li style="margin-bottom: 15px;">
-                            <strong style="color: var(--neon);">2. Machine Learning (Random Forest Classifier):</strong> 
-                            A supervised machine learning model analyzes the extracted feature vector. This enables the platform to detect zero-day phishing links that have never been reported to public blacklists.
-                        </li>
-                        <li style="margin-bottom: 15px;">
-                            <strong style="color: var(--neon);">3. Real-Time Threat Intelligence:</strong> 
-                            For final validation, the system queries global open-source intelligence (OSINT) and threat feeds, cross-referencing domain reputation to establish an instantaneous consensus.
-                        </li>
-                    </ul>
-                </div>
-            </section>
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-            <!-- 3-Level Risk Scoring Framework -->
-            <section class="result-card" style="margin-top: -10px;">
-                <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
-                    <h3 style="color: var(--neon); font-size: 1.5em; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">3-Level Risk Scoring Framework</h3>
-                    <p style="color: var(--text); line-height: 1.6; font-size: 1.1em; margin-bottom: 20px;">
-                        To translate complex mathematical probability and threat feeds into actionable decisions, the platform categorizes every scanned URL into one of three distinct risk tiers:
-                    </p>
-                    <div class="intel-grid">
-                        <div class="intel-card" style="border-left: 4px solid #00ff66;">
-                            <div class="intel-header"><strong>Safe / Low Risk</strong></div>
-                            <p class="intel-detail">Indicates standard URL syntax, benign structural features, and verified clean status across global security feeds. Safe to proceed.</p>
-                        </div>
-                        <div class="intel-card" style="border-left: 4px solid #ffaa00;">
-                            <div class="intel-header"><strong>Suspicious</strong></div>
-                            <p class="intel-detail">Triggered when anomalous lexical indicators (e.g., unusual subdomains, sensitive keywords) or mixed signals are detected. Proceed with caution.</p>
-                        </div>
-                        <div class="intel-card" style="border-left: 4px solid #ff003c;">
-                            <div class="intel-header"><strong>Malicious / High Risk</strong></div>
-                            <p class="intel-detail">Fired when active threat intelligence matches blacklists or machine learning models confirm high probability of a credential harvesting attack. Blocked immediately.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+        .about-card {
+            background: rgba(10, 25, 47, 0.85);
+            border: 1px solid var(--border-light, #00f3ff33);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
 
-            <!-- Why Hybrid Detection Matters -->
-            <section class="result-card" style="margin-top: -10px;">
-                <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
-                    <h3 style="color: var(--neon); font-size: 1.5em; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">Why Hybrid Detection?</h3>
-                    <div class="intel-grid">
-                        <div class="intel-card" style="border-left: 4px solid var(--neon);">
-                            <div class="intel-header"><strong>Zero-Day Resiliency</strong></div>
-                            <p class="intel-detail">Static blocklists fail against newly registered domains. ML heuristics catch malicious intent instantly.</p>
-                        </div>
-                        <div class="intel-card" style="border-left: 4px solid #00ff66;">
-                            <div class="intel-header"><strong>Low False Positives</strong></div>
-                            <p class="intel-detail">Enterprise whitelisting safely bypasses trusted global domains, ensuring seamless user experience.</p>
-                        </div>
-                        <div class="intel-card" style="border-left: 4px solid #ffaa00;">
-                            <div class="intel-header"><strong>Actionable Insights</strong></div>
-                            <p class="intel-detail">Clear risk scores and breakdown metrics explain <em>why</em> a link is dangerous, educating users in real-time.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+        .about-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--neon, #00f3ff);
+            box-shadow: 0 0 10px var(--neon, #00f3ff);
+        }
 
-            <!-- Enterprise Integration -->
-            <section class="result-card" style="margin-top: -10px;">
-                <div class="intel-section" style="border-top: none; padding-top: 0; margin-top: 0;">
-                    <h3 style="color: var(--neon); font-size: 1.5em; border-bottom: 1px solid var(--border-light); padding-bottom: 10px;">Developer & API Access</h3>
-                    <p style="color: var(--text); line-height: 1.6; font-size: 1.1em;">
-                        Built for adaptability, the platform exposes a secured RESTful API endpoint (<code style="color: var(--neon);">/api/v1/analyze</code>). This allows developers and security teams to integrate the hybrid detection engine directly into custom browser extensions, internal security monitoring tools, or automated incident response workflows.
-                    </p>
-                </div>
-            </section>
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
 
+        .tech-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .intel-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .intel-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 6px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* 🛡️ Smooth Entry Animation */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in {
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+        .delay-5 { animation-delay: 0.5s; }
+
+        @media (max-width: 900px) {
+            .intel-grid, .tech-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+
+    <!-- Electric Blue Binary Matrix Canvas Background -->
+    <canvas id="matrix-canvas"></canvas>
+
+    <div class="about-container">
+        <div class="header animate-in delay-1">
+            <h1 style="color: var(--neon, #00f3ff); text-shadow: 0 0 15px rgba(0,243,255,0.4);">THREATLINK INTELLIGENCE GATEWAY</h1>
+            <p class="subtitle" style="color: #a1d1ff;">System Architecture, Machine Learning Pipeline & Threat Telemetry Specs</p>
         </div>
+
+        <!-- Mission Statement -->
+        <section class="about-card animate-in delay-2">
+            <h3 style="color: var(--neon, #00f3ff); font-size: 1.4em; border-bottom: 1px solid rgba(0,243,255,0.2); padding-bottom: 10px; margin-top: 0;">Platform Overview & Mission</h3>
+            <p style="color: #e2e8f0; line-height: 1.6; font-size: 1.05em; margin: 0;">
+                As cyber threat actors deploy automated, zero-day infrastructure faster than traditional static blocklists can update, everyday users face unprecedented digital risks. This platform combines a high-performance Python Flask backend with a serialized machine learning classifier, real-time threat feeds, and automated URL defanging to deliver instant, actionable security intelligence.
+            </p>
+        </section>
+
+        <!-- Applied Technical Stack & ML Model -->
+        <section class="about-card animate-in delay-3">
+            <h3 style="color: var(--neon, #00f3ff); font-size: 1.4em; border-bottom: 1px solid rgba(0,243,255,0.2); padding-bottom: 10px; margin-top: 0;">Applied ML & Detection Architecture</h3>
+            <p style="color: #e2e8f0; line-height: 1.6; font-size: 1.05em; margin-bottom: 15px;">
+                Our hybrid defense mechanism processes every targeted link through a rigorous multi-stage telemetry pipeline:
+            </p>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <strong style="color: var(--neon, #00f3ff);">Machine Learning Model:</strong>
+                    <p style="color: #e2e8f0; font-size: 0.95em; margin: 8px 0 0 0; opacity: 0.9;">Trained and serialized on a 38,800 URL dataset, extracting 14 lexical and host features to achieve <strong>97.01% model accuracy</strong>.</p>
+                </div>
+                <div class="tech-item">
+                    <strong style="color: var(--neon, #00f3ff);">Shortener & Redirect Resolution:</strong>
+                    <p style="color: #e2e8f0; font-size: 0.95em; margin: 8px 0 0 0; opacity: 0.9;">Unmasks malicious redirect hops and shortener links to expose the true destination endpoint prior to evaluation.</p>
+                </div>
+                <div class="tech-item">
+                    <strong style="color: var(--neon, #00f3ff);">Asynchronous AI Briefings:</strong>
+                    <p style="color: #e2e8f0; font-size: 0.95em; margin: 8px 0 0 0; opacity: 0.9;">Integrates automated AI threat summaries to provide instant contextual explanations and actionable insights.</p>
+                </div>
+                <div class="tech-item">
+                    <strong style="color: var(--neon, #00f3ff);">Model Retraining Feedback Loop:</strong>
+                    <p style="color: #e2e8f0; font-size: 0.95em; margin: 8px 0 0 0; opacity: 0.9;">Users can report false positives or flag zero-day phishing samples directly to log telemetry for continuous evaluation.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3-Level Risk Scoring Framework -->
+        <section class="about-card animate-in delay-4">
+            <h3 style="color: var(--neon, #00f3ff); font-size: 1.4em; border-bottom: 1px solid rgba(0,243,255,0.2); padding-bottom: 10px; margin-top: 0;">3-Level Risk Scoring Framework</h3>
+            <p style="color: #e2e8f0; line-height: 1.6; font-size: 1.05em; margin-bottom: 15px;">
+                To translate complex mathematical probability and feed matches into instant security actions, URLs are categorized into three operational tiers:
+            </p>
+            <div class="intel-grid">
+                <div class="intel-card" style="border-left: 4px solid #00ff66;">
+                    <div class="intel-header" style="color: #00ff66; margin-bottom: 8px;"><strong>Safe / Low Risk</strong></div>
+                    <p class="intel-detail" style="margin: 0; font-size: 0.9em; opacity: 0.85;">Standard URL syntax, clean lexical features, and verified clean status across security feeds.</p>
+                </div>
+                <div class="intel-card" style="border-left: 4px solid #ffaa00;">
+                    <div class="intel-header" style="color: #ffaa00; margin-bottom: 8px;"><strong>Suspicious</strong></div>
+                    <p class="intel-detail" style="margin: 0; font-size: 0.9em; opacity: 0.85;">Triggered by anomalous structural indicators or mixed signals. Proceed with caution.</p>
+                </div>
+                <div class="intel-card" style="border-left: 4px solid #ff003c;">
+                    <div class="intel-header" style="color: #ff003c; margin-bottom: 8px;"><strong>Malicious / High Risk</strong></div>
+                    <p class="intel-detail" style="margin: 0; font-size: 0.9em; opacity: 0.85;">Fired when active threat intelligence or ML models confirm credential harvesting behavior.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SOC Utilities & Defanging -->
+        <section class="about-card animate-in delay-5">
+            <h3 style="color: var(--neon, #00f3ff); font-size: 1.4em; border-bottom: 1px solid rgba(0,243,255,0.2); padding-bottom: 10px; margin-top: 0;">SOC Utilities & Data Export</h3>
+            <p style="color: #e2e8f0; line-height: 1.6; font-size: 1.05em; margin: 0;">
+                Built with security analysts in mind, the platform includes automated **URL defanging** (converting dangerous links into safe formats like `hxxps://example[.]com`), **JSON report exports** for incident logging, and **live telemetry feeds** tracking total system scans and neutralized threats in real time.
+            </p>
+        </section>
     </div>
+
+    <!-- Slow Electric Blue Binary Matrix Rain Animation Script -->
+    <script>
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const fontSize = 14;
+        const columns = Math.floor(canvas.width / fontSize);
+        const drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.floor(Math.random() * -100);
+        }
+
+        const chars = '01010101010101010101010101010101';
+        let lastTime = 0;
+        const fps = 24;
+        const interval = 1000 / fps;
+
+        function drawMatrix(currentTime) {
+            requestAnimationFrame(drawMatrix);
+
+            const delta = currentTime - lastTime;
+            if (delta < interval) return;
+            lastTime = currentTime - (delta % interval);
+
+            ctx.fillStyle = 'rgba(7, 15, 30, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00f3ff';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                const x = i * fontSize;
+                const y = drops[i] * fontSize;
+
+                ctx.fillStyle = Math.random() > 0.85 ? '#ffffff' : '#00f3ff';
+                ctx.shadowColor = '#00f3ff';
+                ctx.shadowBlur = 6;
+                ctx.fillText(text, x, y);
+                ctx.shadowBlur = 0;
+
+                if (y > canvas.height && Math.random() > 0.98) {
+                    drops[i] = 0;
+                }
+                drops[i] += 0.5; 
+            }
+        }
+        requestAnimationFrame(drawMatrix);
+    </script>
 {% endblock %}
