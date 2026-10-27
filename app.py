@@ -1,6 +1,9 @@
 import os
-import whois  # <-- Added for Domain Age Intelligence
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from dotenv import load_dotenv
+load_dotenv()  # Safely loads your secret keys from the .env file
+
+import whois
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from flask_login import UserMixin, LoginManager, login_user, current_user, logout_user, login_required
@@ -10,15 +13,17 @@ import joblib
 import uuid
 import requests
 from datetime import datetime, timezone, timedelta
+from functools import wraps
 
-# 🛡️ SECURITY & EXPORT MODULES
+# 🛡️ SECURITY, EXPORT & AI MODULES
 import re
 import csv
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import pandas as pd
+from groq import Groq
 
-# 📧 EMAIL VERIFICATION MODULES (ITSDANGEROUS)
+# 📧 EMAIL VERIFICATION MODULES
 from itsdangerous import URLSafeTimedSerializer
 
 from core.url_processor import normalize_url, is_valid_url, expand_short_url
@@ -34,11 +39,15 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///phishing_system.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ==========================================
-# 📧 BREVO API CONFIGURATION
+# 📧 BREVO & AI CONFIGURATION (GROQ)
 # ==========================================
-BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "fallback_key_here")  # Securely read from environment variable
-SENDER_EMAIL = "amirqayyuum30@gmail.com"  # Verified Brevo sender email
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "fallback_key_here")
+SENDER_EMAIL = "amirqayyuum30@gmail.com"
 SENDER_NAME = "ThreatLink"
+
+# Initialize Groq Client safely
+groq_api_key = os.environ.get("GROQ_API_KEY")
+ai_client = Groq(api_key=groq_api_key) if groq_api_key else None
 
 # ==========================================
 # ⏰ TIMEZONE CONFIGURATION (MALAYSIA UTC+8)
@@ -76,6 +85,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)  # <-- Enterprise Admin Role
     scans = db.relationship('ScanHistory', backref='author', lazy=True)
 
 class ScanHistory(db.Model):
@@ -91,7 +101,8 @@ class FeedbackLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     scan_uuid = db.Column(db.String(36), nullable=False)
     url = db.Column(db.String(500), nullable=False)
-    feedback_type = db.Column(db.String(50), nullable=False) # 'phishing_report' or 'false_positive'
+    feedback_type = db.Column(db.String(50), nullable=False) 
+    status = db.Column(db.String(20), default='Pending') # <-- Triage Status
     timestamp = db.Column(db.String(50), nullable=False)
 
 @login_manager.user_loader
@@ -101,7 +112,7 @@ def load_user(user_id):
 logging.basicConfig(level=logging.INFO)
 
 # ==========================================
-# HELPER FUNCTIONS FOR TOKENS & METRICS
+# HELPER FUNCTIONS
 # ==========================================
 def generate_verification_token(email):
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
@@ -110,60 +121,37 @@ def generate_verification_token(email):
 def confirm_verification_token(token, expiration=3600):
     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     try:
-        email = serializer.loads(
-            token,
-            salt='email-verification-salt',
-            max_age=expiration
-        )
+        email = serializer.loads(token, salt='email-verification-salt', max_age=expiration)
     except Exception:
         return False
     return email
 
 def send_verification_email(to_email, username, verify_url):
-    """Sends verification email via Brevo HTTP API (bypasses SMTP/firewall blocks)"""
     try:
         response = requests.post(
             "https://api.brevo.com/v3/smtp/email",
-            headers={
-                "accept": "application/json",
-                "api-key": BREVO_API_KEY,
-                "content-type": "application/json"
-            },
+            headers={"accept": "application/json", "api-key": BREVO_API_KEY, "content-type": "application/json"},
             json={
-                "sender": {
-                    "name": SENDER_NAME,
-                    "email": SENDER_EMAIL
-                },
-                "to": [
-                    {
-                        "email": to_email,
-                        "name": username
-                    }
-                ],
+                "sender": {"name": SENDER_NAME, "email": SENDER_EMAIL},
+                "to": [{"email": to_email, "name": username}],
                 "subject": "Verify Your Email - ThreatLink Phishing Risk Analyzer",
                 "htmlContent": f"""
-                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; background-color: #f9f9f9; border-radius: 8px;">
+                <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
                     <h2 style="color: #0f172a;">Welcome to ThreatLink, {username}!</h2>
-                    <p>Thank you for registering. Please click the button below to verify your email address and activate your account:</p>
-                    <a href="{verify_url}" style="display: inline-block; padding: 12px 24px; background-color: #06b6d4; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 6px; margin-top: 15px;">Verify Email Address</a>
-                    <p style="margin-top: 25px; font-size: 0.85em; color: #64748b;">If you did not request this, please ignore this email. This verification link will expire in 1 hour.</p>
+                    <p>Thank you for registering. Please click the button below to verify your email address:</p>
+                    <a href="{verify_url}" style="display: inline-block; padding: 12px 24px; background-color: #06b6d4; color: #ffffff; text-decoration: none; font-weight: bold; border-radius: 6px;">Verify Email</a>
                 </div>
                 """
             }
         )
-        if response.status_code in [200, 201]:
-            return True, None
-        else:
-            return False, response.json().get('message', 'Unknown Brevo API error')
+        return response.status_code in [200, 201], response.json().get('message', 'Unknown API error') if response.status_code not in [200, 201] else None
     except Exception as e:
         return False, str(e)
 
 def defang_url(url):
-    """Converts a URL into a safe defanged format (e.g. hxxps://s4w[.]in/...)"""
     return url.replace("https://", "hxxps://").replace("http://", "hxxp://").replace(".", "[.]")
 
 def analyze_url_anatomy(url):
-    """Breaks down URL into anatomy components, calculates domain age, and tags flags."""
     from urllib.parse import urlparse
     parsed = urlparse(url)
     domain = parsed.hostname or ''
@@ -178,58 +166,142 @@ def analyze_url_anatomy(url):
     if len(url) > 75:
         flags.append("Unusually long URL string")
         
-    # --- WHOIS DOMAIN AGE CHECK ---
     domain_age_str = "Unknown / Hidden"
-    
-    # We skip WHOIS for raw IP addresses to avoid query errors
     if not re.match(r'^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$', domain) and domain:
         try:
             w = whois.whois(domain)
             creation_date = w.creation_date
-            
             if creation_date:
-                # Some registrars return a list of dates; grab the first one
-                if isinstance(creation_date, list):
-                    creation_date = creation_date[0]
-                
+                if isinstance(creation_date, list): creation_date = creation_date[0]
                 if isinstance(creation_date, datetime):
-                    # Convert to timezone-naive to prevent subtraction errors
                     naive_creation = creation_date.replace(tzinfo=None)
                     naive_now = datetime.now().replace(tzinfo=None)
-                    
                     age_days = (naive_now - naive_creation).days
                     domain_age_str = f"{age_days} Days"
-                    
-                    # 🚩 Flag if the domain is dangerously new (under 30 days)
                     if age_days < 30:
                         flags.append(f"Newly Registered Domain (Only {age_days} days old)")
         except Exception as e:
             domain_age_str = "Lookup Failed/Timeout"
             logging.warning(f"WHOIS lookup failed for {domain}: {e}")
-    # ------------------------------
-        
+            
     return {
         "protocol": parsed.scheme.upper() or "HTTPS",
         "domain": domain or "N/A",
         "path": parsed.path or "/",
         "query": parsed.query or "None",
-        "domain_age": domain_age_str,  # <-- Added domain age to response payload
+        "domain_age": domain_age_str,
         "flags": flags if flags else ["Standard structural pattern"]
     }
 
 def get_top_ml_features(features_dict, ml_probability):
-    """Generates explainability metrics and top contributing features."""
     features_list = [
         {"feature": "URL String Length", "impact": round(min(len(features_dict.get('raw_url', '')) / 100.0, 1.0) * 100, 1), "desc": f"Length: {len(features_dict.get('raw_url', ''))} chars"},
         {"feature": "Lexical Entropy", "impact": round(features_dict.get('entropy', 0.5) * 100, 1), "desc": "Random character distribution metric"},
-        {"feature": "Subdomain Count", "impact": round(min(features_dict.get('subdomain_count', 1) * 20, 100.0), 1), "desc": f"Subdomain depth level"},
+        {"feature": "Subdomain Count", "impact": round(min(features_dict.get('subdomain_count', 1) * 20, 100.0), 1), "desc": "Subdomain depth level"},
         {"feature": "Suspicious TLD / Keywords", "impact": round(ml_probability * 100, 1), "desc": "Machine learning pattern weight"}
     ]
     features_list.sort(key=lambda x: x['impact'], reverse=True)
     return features_list[:4]
 
+def generate_ai_threat_briefing(url, risk_score, risk_category, anatomy, intel_results):
+    if not ai_client:
+        return "AI Briefing unavailable: GROQ_API_KEY not configured. Ensure it is set in your environment variables."
+
+    prompt = f"""
+    You are an expert Cyber Threat Intelligence Analyst in a Security Operations Center (SOC). 
+    Analyze the following URL scan telemetry and write a concise, professional 3-sentence threat briefing for a security analyst:
+    
+    - Target URL: {url}
+    - Risk Score: {risk_score}/100
+    - Risk Category: {risk_category}
+    - Domain Age: {anatomy.get('domain_age', 'Unknown')}
+    - Structural Flags: {', '.join(anatomy.get('flags', []))}
+    - Threat Intel Matches: {[res.source for res in intel_results if res.verdict in ['Malicious', 'High Risk']]}
+    
+    Provide actionable insight and highlight why this link is dangerous or safe. 
+    IMPORTANT: Do not use any markdown bold asterisks (**). Start the final recommendation with the exact phrase: "Actionable Insight:".
+    """
+
+    try:
+        completion = ai_client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+        )
+        briefing_text = completion.choices[0].message.content.strip()
+        briefing_text = briefing_text.replace("**", "")
+        
+        return briefing_text
+    except Exception as e:
+        logging.warning(f"Groq AI briefing generation failed: {str(e)}")
+        return "AI Threat Intelligence Briefing temporarily unavailable."
+
 # ==========================================
-# ROUTES
+# ADMIN ROUTES & DECORATORS
+# ==========================================
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not getattr(current_user, 'is_admin', False):
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/admin')
+@login_required
+@admin_required
+def admin_dashboard():
+    total_users = User.query.count()
+    total_scans = ScanHistory.query.count()
+    pending_feedback = FeedbackLog.query.filter_by(status='Pending').all()
+    all_users = User.query.all()
+    recent_scans = ScanHistory.query.order_by(ScanHistory.id.desc()).limit(50).all()
+    
+    return render_template('admin.html', 
+                           total_users=total_users, 
+                           total_scans=total_scans, 
+                           pending_feedback=pending_feedback, 
+                           all_users=all_users,
+                           recent_scans=recent_scans)
+
+@app.route('/admin/resolve_feedback/<int:feedback_id>', methods=['POST'])
+@login_required
+@admin_required
+def resolve_feedback(feedback_id):
+    fb = FeedbackLog.query.get(feedback_id)
+    if fb:
+        fb.status = 'Resolved'
+        db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/toggle_user/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def toggle_user(user_id):
+    user = User.query.get(user_id)
+    if user and user.id != current_user.id:
+        user.is_verified = not user.is_verified
+        db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/retrain_model', methods=['POST'])
+@login_required
+@admin_required
+def retrain_model():
+    try:
+        from train_model import retrain_phishing_model
+        success, message = retrain_phishing_model()
+    except ImportError:
+        success, message = False, "MLOps module (train_model.py) not found in system."
+        
+    if success:
+        flash(f"✅ {message}", "success")
+    else:
+        flash(f"❌ Retraining error: {message}", "error")
+    return redirect(url_for('admin_dashboard'))
+
+# ==========================================
+# PUBLIC ROUTES
 # ==========================================
 @app.route("/about")
 def about():
@@ -242,13 +314,11 @@ def signup():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
+        if User.query.filter_by(username=username).first():
             flash("Oops! That username is already taken. Please try another one.")
             return redirect(url_for('signup'))
             
-        existing_email = User.query.filter_by(email=email).first()
-        if existing_email:
+        if User.query.filter_by(email=email).first():
             flash("Oops! That email address is already registered.")
             return redirect(url_for('signup'))
             
@@ -258,26 +328,21 @@ def signup():
             return redirect(url_for('signup'))
             
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        new_user = User(username=username, email=email, password_hash=hashed_password, is_verified=False)
+        is_first_user = User.query.count() == 0
+        new_user = User(username=username, email=email, password_hash=hashed_password, is_verified=False, is_admin=is_first_user)
         db.session.add(new_user)
         db.session.commit()
         
-        # Generate verification token and link
         token = generate_verification_token(email)
         verify_url = url_for('verify_email', token=token, _external=True)
-        
-        # 🛡️ BACKUP TERMINAL PRINT (GUARANTEES YOU NEVER GET LOCKED OUT FOR TESTING)
         print(f"\n[DEBUG - VERIFICATION LINK FOR {email}]:\n{verify_url}\n")
         
-        # Send via Brevo HTTP API
         success, error_msg = send_verification_email(email, username, verify_url)
-        
         if success:
             flash('Registration successful! Please check your inbox to verify your account before logging in.')
         else:
-            flash(f'Account created, but email delivery failed: {error_msg}. Check terminal for direct link.')
+            flash(f'Account created, but email delivery failed. Check terminal for direct link.')
             print(f"\n[BREVO API ERROR]: {error_msg}\n")
-
         return redirect(url_for('login'))
         
     return render_template('signup.html')
@@ -300,7 +365,6 @@ def verify_email(token):
         user.is_verified = True
         db.session.commit()
         flash('Email verified successfully! You can now log in.')
-    
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -319,7 +383,6 @@ def login():
         else:
             flash("Invalid username or password. Please try again.")
             return redirect(url_for('login'))
-            
     return render_template('login.html')
 
 @app.route('/logout')
@@ -378,6 +441,32 @@ def submit_feedback():
     db.session.commit()
     return jsonify({"success": True, "message": "Feedback recorded successfully for model evaluation."})
 
+@app.route('/api/ai_briefing', methods=['POST'])
+def api_ai_briefing():
+    """Asynchronous endpoint to fetch the AI briefing separately to speed up scan loading."""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    url = data.get('url', '')
+    risk_score = data.get('risk_score', 0)
+    risk_category = data.get('risk_category', 'Unknown')
+    domain_age = data.get('domain_age', 'Unknown')
+    flags = data.get('flags', [])
+    intel_sources = data.get('intel_sources', [])
+    
+    anatomy = {'domain_age': domain_age, 'flags': flags}
+    
+    class IntelMock:
+        def __init__(self, source, verdict):
+            self.source = source
+            self.verdict = verdict
+            
+    intel_results = [IntelMock(item.get('source'), item.get('verdict')) for item in intel_sources]
+    
+    briefing = generate_ai_threat_briefing(url, risk_score, risk_category, anatomy, intel_results)
+    return jsonify({"ai_briefing": briefing})
+
 @app.route("/analyze", methods=["POST"])
 @limiter.limit("5 per minute") 
 def analyze():
@@ -411,6 +500,7 @@ def analyze():
 
     if parsed_domain in TRUSTED_DOMAINS:
         intel_results = query_threat_intelligence(target_url)
+        anatomy_data = analyze_url_anatomy(target_url)
         
         new_scan = ScanHistory(
             scan_uuid=scan_uuid, url_scanned=target_url, risk_score=0.0, status="Safe", 
@@ -421,7 +511,7 @@ def analyze():
             
         total_scans = ScanHistory.query.count()
         threats_detected = ScanHistory.query.filter(ScanHistory.status.in_(['Malicious', 'High Risk'])).count()
-        
+
         return jsonify({
             "scan_id": scan_uuid[:8].upper(),
             "timestamp": timestamp_str,
@@ -435,7 +525,7 @@ def analyze():
             },
             "top_features": [{"feature": "Enterprise Whitelist Match", "impact": 0.0, "desc": "Domain verified in trusted enterprise registry"}],
             "redirect_chain": redirect_chain,
-            "anatomy": analyze_url_anatomy(target_url),
+            "anatomy": anatomy_data,
             "defanged_url": defang_url(target_url),
             "intel_results": [res.__dict__ for res in intel_results],
             "url": target_url,
@@ -463,13 +553,15 @@ def analyze():
             "threat_intel_match": sum(1 for r in intel_results if r.verdict in ['Malicious', 'High Risk']),
             "safety_override": "None required (Computed via weighted ensemble model)"
         }
+        
+        anatomy_data = analyze_url_anatomy(target_url)
 
         result["scan_id"] = scan_uuid[:8].upper()
         result["timestamp"] = timestamp_str
         result["score_breakdown"] = score_breakdown
         result["top_features"] = get_top_ml_features(features, ml_probability)
         result["redirect_chain"] = redirect_chain
-        result["anatomy"] = analyze_url_anatomy(target_url)
+        result["anatomy"] = anatomy_data
         result["defanged_url"] = defang_url(target_url)
         result["intel_results"] = [res.__dict__ for res in intel_results]
         result["url"] = target_url
@@ -499,7 +591,10 @@ def analyze():
 
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception:
+            pass
         
     print("\n=========================================================")
     print(" 🛡️  HYBRID PHISHING DETECTION ENGINE - ONLINE")

@@ -244,6 +244,9 @@
                 <div class="soc-section-title">Top ML Prediction Drivers (Explainability)</div>
                 <div id="ml-explainability-container" style="margin-top: 10px;"></div>
 
+                <!-- ASYNCHRONOUS AI BRIEFING SECTION WITH TIMEOUT SAFEGUARD -->
+                <div class="soc-section-title" style="margin-top: 25px;">AI Threat Intelligence Briefing</div>
+                <div id="ai-briefing-text" style="background: rgba(0,243,255,0.05); border-left: 3px solid var(--neon); padding: 12px 15px; border-radius: 4px; font-size: 0.95em; line-height: 1.6; color: #e2e8f0;"></div>
                 <div class="soc-section-title" style="margin-top: 25px;">Threat Intelligence Status</div>
                 <p style="font-size: 0.85em; opacity: 0.75; margin-bottom: 10px;">*Note: 0 vendors flagged on VirusTotal does not guarantee safety if heuristics or OpenPhish indicate zero-day phishing indicators.</p>
                 <div id="intel-grid" class="intel-grid"></div>
@@ -412,6 +415,47 @@
                     </table>
                 `;
             }
+
+            // ASYNCHRONOUS AI BRIEFING TRIGGER WITH TIMEOUT SAFEGUARD
+            const aiBriefingEl = document.getElementById("ai-briefing-text");
+            aiBriefingEl.innerHTML = '<span style="opacity: 0.6; font-style: italic;">Synthesizing AI Threat Intelligence Briefing...</span>';
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+            fetch('/api/ai_briefing', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    url: data.url,
+                    risk_score: data.risk_score,
+                    risk_category: data.risk_category,
+                    domain_age: data.anatomy ? data.anatomy.domain_age : 'Unknown',
+                    flags: data.anatomy ? data.anatomy.flags : [],
+                    intel_sources: data.intel_results ? data.intel_results.map(i => ({source: i.source, verdict: i.verdict})) : []
+                }),
+                signal: controller.signal
+            })
+            .then(res => {
+                clearTimeout(timeoutId);
+                return res.json();
+            })
+            .then(aiData => {
+                let rawBriefing = aiData.ai_briefing || "No AI briefing generated.";
+                let formattedBriefing = rawBriefing.replace(
+                    "Actionable Insight:", 
+                    "<br><br><strong>Actionable Insight:</strong>"
+                );
+                aiBriefingEl.innerHTML = formattedBriefing;
+            })
+            .catch(err => {
+                clearTimeout(timeoutId);
+                if (err.name === 'AbortError') {
+                    aiBriefingEl.innerText = "AI briefing timed out due to high Google server demand. Your core scan results are unaffected.";
+                } else {
+                    aiBriefingEl.innerText = "AI briefing temporarily unavailable.";
+                }
+            });
 
             const grid = document.getElementById("intel-grid");
             grid.innerHTML = ""; 
