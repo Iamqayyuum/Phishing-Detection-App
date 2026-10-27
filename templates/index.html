@@ -35,6 +35,66 @@
         }
         .content-area { width: 100%; }
 
+        /* Scanner Mode Tabs */
+        .scan-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .tab-btn {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            color: #a1d1ff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            background: rgba(0, 243, 255, 0.2);
+            border-color: var(--neon, #00f3ff);
+            color: var(--neon, #00f3ff);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+        .scan-tab-content { display: none; }
+        .scan-tab-content.active { display: block; }
+
+        /* Modern Cyberpunk Dropzone */
+        .dropzone-container {
+            border: 2px dashed rgba(0, 243, 255, 0.35);
+            background: rgba(5, 15, 30, 0.6);
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .dropzone-container:hover, .dropzone-container.dragover {
+            border-color: var(--neon, #00f3ff);
+            background: rgba(0, 243, 255, 0.05);
+            box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        /* Fixed Circular Glowing Spinner */
+        .cyber-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0, 243, 255, 0.2);
+            border-top-color: var(--neon, #00f3ff);
+            border-radius: 50%;
+            animation: cyber-spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.5);
+        }
+        @keyframes cyber-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .loader-steps {
             font-size: 0.95em;
             color: var(--neon, #00f3ff);
@@ -86,9 +146,7 @@
             font-weight: 700;
             letter-spacing: 0.5px;
         }
-        .ml-telemetry-table tr:last-child td {
-            border-bottom: none;
-        }
+        .ml-telemetry-table tr:last-child td { border-bottom: none; }
 
         .feature-bar-bg { 
             background: rgba(0, 0, 0, 0.7); 
@@ -99,7 +157,6 @@
             overflow: hidden; 
             position: relative;
         }
-
         .feature-bar-fill { 
             height: 100%; 
             background: linear-gradient(90deg, #00f3ff, #ff003c); 
@@ -115,7 +172,6 @@
             gap: 15px;
             margin-top: 10px;
         }
-
         .intel-card {
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(0, 243, 255, 0.2);
@@ -127,7 +183,6 @@
             flex-direction: column;
             justify-content: space-between;
         }
-
         .intel-card::before {
             content: '';
             position: absolute;
@@ -149,13 +204,7 @@
             font-size: 1.05em;
             font-weight: 700;
         }
-
-        .intel-detail {
-            font-size: 0.95em;
-            opacity: 0.85;
-            margin: 0;
-            line-height: 1.5;
-        }
+        .intel-detail { font-size: 0.95em; opacity: 0.85; margin: 0; line-height: 1.5; }
 
         .badge {
             padding: 4px 8px;
@@ -169,19 +218,12 @@
         .intel-card.clean .badge { color: #00ff66; border-color: #00ff66; background: rgba(0, 255, 102, 0.1); }
         .intel-card.malicious .badge { color: #ff003c; border-color: #ff003c; background: rgba(255, 0, 60, 0.1); }
         .intel-card.suspicious .badge { color: #ffaa00; border-color: #ffaa00; background: rgba(255, 170, 0, 0.1); }
-        .intel-card.error .badge, .intel-card.unknown .badge { color: #fff; border-color: #fff; background: rgba(255, 255, 255, 0.1); }
 
-        /* 🛡️ Smooth Entry Animation */
         @keyframes slideUpFade {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .animate-in {
-            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-        }
-
+        .animate-in { animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         .delay-1 { animation-delay: 0.1s; }
         .delay-2 { animation-delay: 0.2s; }
         .delay-3 { animation-delay: 0.3s; }
@@ -192,10 +234,7 @@
             .left-sidebar { order: 2; }
             .right-sidebar { order: 3; }
         }
-
-        @media (max-width: 768px) {
-            .intel-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 768px) { .intel-grid { grid-template-columns: 1fr; } }
     </style>
 
     <!-- Electric Blue Binary Matrix Canvas Background -->
@@ -218,16 +257,56 @@
 
         <div class="content-area animate-in delay-2">
             <section class="input-card" style="position: relative; overflow: hidden; background: rgba(10, 25, 47, 0.85); border: 1px solid var(--border-light, #00f3ff33); border-radius: 8px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-                <div id="laser-scanner" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--neon, #00f3ff); box-shadow: 0 0 15px #00f3ff; transform: translateY(-10px); transition: transform 1.5s ease-in-out; opacity: 0; z-index: 10;"></div>
                 
-                <form id="analyze-form" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-                    <input type="text" id="url-input" placeholder="> Enter a website URL to scan..." required autocomplete="off" style="width: 100%; background: rgba(5, 15, 30, 0.9); border: 1px solid rgba(0,243,255,0.3); color: #fff; padding: 12px 15px; border-radius: 4px; outline: none;">
+                <!-- Scan Mode Tabs -->
+                <div class="scan-tabs">
+                    <button type="button" class="tab-btn active" onclick="switchTab('single')">Single URL Scan</button>
+                    <button type="button" class="tab-btn" onclick="switchTab('batch')">Batch CSV Upload</button>
+                </div>
+
+                <!-- Single URL Scanner Tab -->
+                <div id="tab-single" class="scan-tab-content active">
+                    <div id="laser-scanner" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--neon, #00f3ff); box-shadow: 0 0 15px #00f3ff; transform: translateY(-10px); transition: transform 1.5s ease-in-out; opacity: 0; z-index: 10;"></div>
                     
-                    <button type="submit" id="analyze-btn" style="width: 100%; margin-top: 12px; background: rgba(0,243,255,0.15); border: 1px solid var(--neon, #00f3ff); color: var(--neon, #00f3ff); padding: 12px; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase;">
-                        <span id="btn-text">INITIATE SCAN</span>
-                        <div id="spinner" class="spinner hidden"></div>
-                    </button>
-                </form>
+                    <form id="analyze-form" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                        <input type="text" id="url-input" placeholder="> Enter a website URL to scan..." required autocomplete="off" style="width: 100%; background: rgba(5, 15, 30, 0.9); border: 1px solid rgba(0,243,255,0.3); color: #fff; padding: 12px 15px; border-radius: 4px; outline: none;">
+                        
+                        <button type="submit" id="analyze-btn" style="width: 100%; margin-top: 12px; background: rgba(0,243,255,0.15); border: 1px solid var(--neon, #00f3ff); color: var(--neon, #00f3ff); padding: 12px; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase;">
+                            <span id="btn-text">INITIATE SCAN</span>
+                            <div id="spinner" class="cyber-spinner hidden" style="margin-left: 8px;"></div>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Batch CSV Upload Tab -->
+                <div id="tab-batch" class="scan-tab-content">
+                    <div class="dropzone-container" id="dropzone" onclick="document.getElementById('csv-file-input').click()">
+                        <input type="file" id="csv-file-input" accept=".csv" style="display: none;" onchange="handleFileSelect(this)">
+                        <div id="dropzone-content">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon, #00f3ff)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <p style="color: #fff; font-weight: 600; margin: 0 0 4px 0;">Drop your CSV file here, or <span style="color: var(--neon, #00f3ff); text-decoration: underline;">browse</span></p>
+                            <p style="color: #8aa4c8; font-size: 0.85em; margin: 0;">Supports bulk URL audit reports (.csv)</p>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button type="button" id="batch-submit-btn" onclick="handleBatchUpload()" class="tab-btn active" style="flex: 2; padding: 12px; text-transform: uppercase; font-weight: 700; opacity: 0.5; pointer-events: none;" disabled>
+                            <span id="batch-btn-text">Process Batch Threat Report</span>
+                            <div id="batch-spinner" class="cyber-spinner hidden" style="margin-left: 8px;"></div>
+                        </button>
+                        <button type="button" id="batch-cancel-btn" onclick="cancelBatchUpload()" class="tab-btn hidden" style="flex: 1; padding: 12px; background: rgba(255,0,60,0.15); border-color: #ff003c; color: #ff003c; text-transform: uppercase; font-weight: 700;">
+                            Cancel
+                        </button>
+                    </div>
+
+                    <!-- Batch Progress Steps & Dynamic Timer in Minutes/Seconds -->
+                    <div id="batch-loader-box" class="loader-steps hidden" style="margin-top: 15px;">
+                        <div id="batch-step-1" class="loader-step-item active">[1/3] Uploading and parsing CSV rows...</div>
+                        <div id="batch-step-2" class="loader-step-item">[2/3] Running ML feature extraction & threat intelligence lookups...</div>
+                        <div id="batch-step-3" class="loader-step-item">[3/3] Compiling audit report & generating download...</div>
+                        <p id="batch-timer" style="margin-top: 8px; font-size: 0.85em; color: var(--neon, #00f3ff); opacity: 0.8;">Processing bulk analysis... Elapsed: 0s | Est. remaining: ~10s</p>
+                    </div>
+                </div>
 
                 <div id="loader-box" class="loader-steps hidden">
                     <div id="step-1" class="loader-step-item">[1/4] Normalizing URL & expanding shortener hops...</div>
@@ -255,8 +334,6 @@
                 <div class="soc-section-title">[INFO] Score Breakdown</div>
                 <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid rgba(0,243,255,0.1); font-size: 0.95em;">
                     <ul style="margin: 0; padding-left: 18px; line-height: 1.6;">
-                        <li>ML Classifier Probability: <span id="breakdown-ml" style="color: #fff;"></span>%</li>
-                        <li>Heuristic Anomaly Weight: <span id="breakdown-heuristic" style="color: #fff;"></span> pts</li>
                         <li>Threat Intelligence Hits: <span id="breakdown-intel" style="color: #fff;"></span> match(es)</li>
                         <li>Safety Status Override: <em id="breakdown-override" style="color: #00ff66;">None</em></li>
                     </ul>
@@ -344,7 +421,7 @@
 
         const chars = '01010101010101010101010101010101';
         let lastTime = 0;
-        const fps = 24; // Lower FPS slows down the frame updates smoothly
+        const fps = 24;
         const interval = 1000 / fps;
 
         function drawMatrix(currentTime) {
@@ -374,261 +451,458 @@
                 if (y > canvas.height && Math.random() > 0.98) {
                     drops[i] = 0;
                 }
-                // Slower drop step increment
                 drops[i] += 0.5; 
             }
         }
         requestAnimationFrame(drawMatrix);
-    </script>
 
-    <script>
-    const analyzeForm = document.getElementById("analyze-form");
-    const urlInput = document.getElementById("url-input");
-    const analyzeBtn = document.getElementById("analyze-btn");
-    const btnText = document.getElementById("btn-text");
-    const spinner = document.getElementById("spinner");
-    const laserScanner = document.getElementById("laser-scanner");
-    const loaderBox = document.getElementById("loader-box");
-
-    let activeScanUuid = null;
-    let currentScannedUrl = null;
-
-    function categoryToClass(category) {
-        const c = (category || "").toLowerCase().trim();
-        if (c === "safe" || c === "low risk") return "low-risk";
-        if (c === "suspicious") return "medium-risk";
-        if (c === "malicious" || c === "high risk") return "high-risk";
-        return "medium-risk"; 
-    }
-
-    analyzeForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const url = urlInput.value.trim();
-        currentScannedUrl = url;
-
-        analyzeBtn.disabled = true;
-        btnText.classList.add("hidden");
-        spinner.classList.remove("hidden");
-        loaderBox.classList.remove("hidden");
-        
-        const steps = [document.getElementById("step-1"), document.getElementById("step-2"), document.getElementById("step-3"), document.getElementById("step-4")];
-        steps.forEach(s => s.classList.remove("active"));
-        
-        let stepIdx = 0;
-        steps[stepIdx].classList.add("active");
-        const stepInterval = setInterval(() => {
-            stepIdx++;
-            if(stepIdx < steps.length) {
-                steps.forEach(s => s.classList.remove("active"));
-                steps[stepIdx].classList.add("active");
-            }
-        }, 400);
-
-        laserScanner.style.opacity = "1";
-        let moveDown = true;
-        let scanInterval = setInterval(() => {
-            laserScanner.style.transform = moveDown ? "translateY(70px)" : "translateY(-10px)";
-            moveDown = !moveDown;
-        }, 1500);
-
-        try {
-            const formData = new FormData();
-            formData.append("url", url);
-            const resp = await fetch("/analyze", { method: "POST", body: formData });
-            const data = await resp.json();
-
-            clearInterval(stepInterval);
-            loaderBox.classList.add("hidden");
-
-            if (data.error) { alert(data.error); return; }
-
-            activeScanUuid = data.scan_id;
-            document.getElementById("result-card").classList.remove("hidden");
-
-            document.getElementById("meta-scan-id").innerText = data.scan_id;
-            document.getElementById("meta-timestamp").innerText = data.timestamp;
-
-            if (data.total_scans !== undefined) document.getElementById("sidebar-total-scans").innerText = data.total_scans;
-            if (data.threats_detected !== undefined) document.getElementById("sidebar-threats-detected").innerText = data.threats_detected;
-
-            document.getElementById("risk-score").innerText = `SCORE: ${parseFloat(data.risk_score).toFixed(2)}/100`;
-            document.getElementById("risk-bar").style.width = data.risk_score + "%";
-            document.getElementById("risk-bar").style.background = data.risk_score > 70 ? "#ff003c" : data.risk_score > 30 ? "#ffaa00" : "#00ff66";
-            document.getElementById("risk-category").innerText = data.risk_category;
-            document.getElementById("risk-category").className = "risk-label " + categoryToClass(data.risk_category);
-
-            if (data.score_breakdown) {
-                document.getElementById("breakdown-ml").innerText = data.score_breakdown.ml_probability;
-                document.getElementById("breakdown-heuristic").innerText = data.score_breakdown.heuristic_score;
-                document.getElementById("breakdown-intel").innerText = data.score_breakdown.threat_intel_match;
-                document.getElementById("breakdown-override").innerText = data.score_breakdown.safety_override;
-            }
-
-            const chainBox = document.getElementById("redirect-chain-box");
-            if (data.redirect_chain && data.redirect_chain.length > 0) {
-                chainBox.innerHTML = data.redirect_chain.map((hop, idx) => `<div>Hop ${idx + 1}: <span style="color: var(--neon, #00f3ff);">${hop}</span></div>`).join('');
+        // Tab Switching Logic
+        function switchTab(mode) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.scan-tab-content').forEach(c => c.classList.remove('active'));
+            if (mode === 'single') {
+                event.target.classList.add('active');
+                document.getElementById('tab-single').classList.add('active');
             } else {
-                chainBox.innerText = "Direct connection (No redirects/shorteners detected)";
+                event.target.classList.add('active');
+                document.getElementById('tab-batch').classList.add('active');
             }
+        }
 
-            if (data.anatomy) {
-                document.getElementById("anatomy-protocol").innerText = data.anatomy.protocol;
-                document.getElementById("anatomy-domain").innerText = data.anatomy.domain;
-                document.getElementById("anatomy-path").innerText = data.anatomy.path;
-                document.getElementById("anatomy-age").innerText = data.anatomy.domain_age || "N/A";
-                document.getElementById("anatomy-flags").innerText = data.anatomy.flags.join(', ');
+        // Drag & Drop File Handling
+        const dropzone = document.getElementById('dropzone');
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+            }, false);
+        });
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) {
+                document.getElementById('csv-file-input').files = files;
+                handleFileSelect(document.getElementById('csv-file-input'));
             }
+        });
 
-            const explContainer = document.getElementById("ml-explainability-container");
-            explContainer.innerHTML = "";
-            if (data.top_features && data.top_features.length > 0) {
-                explContainer.innerHTML = `
-                    <table class="ml-telemetry-table">
-                        <thead>
-                            <tr>
-                                <th>Feature Metric</th>
-                                <th style="width: 120px;">Impact Weight</th>
-                                <th style="width: 35%;">Distribution</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${data.top_features.map(f => `
-                                <tr>
-                                    <td>${f.feature}</td>
-                                    <td style="font-family: inherit; color: var(--neon, #00f3ff); font-weight: 700;">${f.impact}%</td>
-                                    <td>
-                                        <div class="feature-bar-bg">
-                                            <div class="feature-bar-fill" style="width: ${f.impact}%;"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+        function handleFileSelect(input) {
+            const dropzoneContent = document.getElementById('dropzone-content');
+            const submitBtn = document.getElementById('batch-submit-btn');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                dropzoneContent.innerHTML = `
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00ff66" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <p style="color: #00ff66; font-weight: 700; margin: 0 0 2px 0; font-size: 1.05em;">${file.name}</p>
+                    <p style="color: #a1d1ff; font-size: 0.85em; margin: 0;">File loaded successfully (${(file.size / 1024).toFixed(1)} KB)</p>
                 `;
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = "1";
+                submitBtn.style.pointerEvents = "auto";
+            }
+        }
+
+        let batchAbortController = null;
+        let batchTimerInterval = null;
+
+        function cancelBatchUpload() {
+            if (batchAbortController) {
+                batchAbortController.abort();
+                batchAbortController = null;
+            }
+            if (batchTimerInterval) {
+                clearInterval(batchTimerInterval);
+                batchTimerInterval = null;
             }
 
-            // ASYNCHRONOUS AI BRIEFING TRIGGER WITH TIMEOUT SAFEGUARD
-            const aiBriefingEl = document.getElementById("ai-briefing-text");
-            aiBriefingEl.innerHTML = '<span style="opacity: 0.6; font-style: italic;">Synthesizing AI Threat Intelligence Briefing...</span>';
+            const batchBtn = document.getElementById('batch-submit-btn');
+            const batchBtnText = document.getElementById('batch-btn-text');
+            const batchSpinner = document.getElementById('batch-spinner');
+            const batchLoaderBox = document.getElementById('batch-loader-box');
+            const batchCancelBtn = document.getElementById('batch-cancel-btn');
 
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 12000);
+            batchBtn.disabled = false;
+            batchBtnText.innerText = "Process Batch Threat Report";
+            batchSpinner.classList.add("hidden");
+            batchLoaderBox.classList.add("hidden");
+            batchCancelBtn.classList.add("hidden");
 
-            fetch('/api/ai_briefing', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    url: data.url,
-                    risk_score: data.risk_score,
-                    risk_category: data.risk_category,
-                    domain_age: data.anatomy ? data.anatomy.domain_age : 'Unknown',
-                    flags: data.anatomy ? data.anatomy.flags : [],
-                    intel_sources: data.intel_results ? data.intel_results.map(i => ({source: i.source, verdict: i.verdict})) : []
-                }),
-                signal: controller.signal
-            })
-            .then(res => {
-                clearTimeout(timeoutId);
-                return res.json();
-            })
-            .then(aiData => {
-                let rawBriefing = aiData.ai_briefing || "No AI briefing generated.";
-                let formattedBriefing = rawBriefing.replace(
-                    "Actionable Insight:", 
-                    "<br><br><strong>Actionable Insight:</strong>"
-                );
-                aiBriefingEl.innerHTML = formattedBriefing;
-            })
-            .catch(err => {
-                clearTimeout(timeoutId);
-                if (err.name === 'AbortError') {
-                    aiBriefingEl.innerText = "AI briefing timed out due to high Google server demand. Your core scan results are unaffected.";
-                } else {
-                    aiBriefingEl.innerText = "AI briefing temporarily unavailable.";
+            showToast("⚠️ Batch threat analysis cancelled.");
+        }
+
+        async function handleBatchUpload() {
+            const fileInput = document.getElementById('csv-file-input');
+            const batchBtn = document.getElementById('batch-submit-btn');
+            const batchBtnText = document.getElementById('batch-btn-text');
+            const batchSpinner = document.getElementById('batch-spinner');
+            const batchLoaderBox = document.getElementById('batch-loader-box');
+            const batchTimer = document.getElementById('batch-timer');
+            const batchCancelBtn = document.getElementById('batch-cancel-btn');
+
+            if (!fileInput.files.length) {
+                alert('Please select a valid CSV file first.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append("file", file);
+
+            // UI Loading State
+            batchBtn.disabled = true;
+            batchBtnText.innerText = "PROCESSING BATCH...";
+            batchSpinner.classList.remove("hidden");
+            batchLoaderBox.classList.remove("hidden");
+            batchCancelBtn.classList.remove("hidden");
+
+            // Calculate estimated duration (~1.5s per URL)
+            let estimatedSeconds = 10;
+            try {
+                const text = await file.text();
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                const rowCount = lines.length > 1 && (lines[0].toLowerCase().includes('url') || lines[0].toLowerCase().includes('target')) ? lines.length - 1 : lines.length;
+                estimatedSeconds = Math.max(5, rowCount * 1.5);
+            } catch (e) {
+                console.error("Could not parse row count locally", e);
+            }
+
+            let secondsElapsed = 0;
+            let remainingSeconds = Math.ceil(estimatedSeconds);
+
+            function formatTime(totalSecs) {
+                const mins = Math.floor(totalSecs / 60);
+                const secs = totalSecs % 60;
+                if (mins > 0) {
+                    return `~${mins}m ${secs}s`;
                 }
-            });
-
-            const grid = document.getElementById("intel-grid");
-            grid.innerHTML = ""; 
-            if (data.intel_results && Array.isArray(data.intel_results) && data.intel_results.length > 0) {
-                grid.innerHTML = data.intel_results.map(intel => {
-                    const verdictClass = (intel.verdict || "neutral").toLowerCase();
-                    return `
-                    <div class="intel-card ${verdictClass}">
-                        <div class="intel-header">
-                            <strong>${intel.source || 'Unknown'}</strong>
-                            <span class="badge">${intel.verdict ? intel.verdict.toUpperCase() : 'N/A'}</span>
-                        </div>
-                        <p class="intel-detail">${intel.detail || 'No details provided.'}</p>
-                    </div>
-                `}).join('');
+                return `~${secs}s`;
             }
 
-            const reasonList = document.getElementById("reason-list");
-            const findingsArray = data.findings || [];
-            if (findingsArray.length > 0) {
-                reasonList.innerHTML = findingsArray.map(r => {
-                    const isThreat = r.toLowerCase().includes('malicious') || r.toLowerCase().includes('match') || r.toLowerCase().includes('high risk') || r.toLowerCase().includes('newly registered');
-                    const cssClass = isThreat ? "finding-high" : "finding-safe";
-                    return `<div class="${cssClass}">• ${r}</div>`;
-                }).join('');
-            }
+            batchTimerInterval = setInterval(() => {
+                secondsElapsed++;
+                remainingSeconds = Math.max(0, Math.ceil(estimatedSeconds - secondsElapsed));
+                
+                const formattedElapsed = formatTime(secondsElapsed);
+                const formattedRemaining = formatTime(remainingSeconds);
 
-            const recContainer = document.getElementById("recommendation-text");
-            const recData = data.recommendations || "";
-            if (Array.isArray(recData)) {
-                recContainer.innerHTML = recData.map(r => `<div style="margin-bottom: 8px;">• ${r}</div>`).join('');
-            } else {
-                let formattedText = recData
-                    .replace(/(Immediate Action:|Verification:|Reporting:|Action:)/g, '<br><strong style="color: var(--neon, #00f3ff);">$1</strong>')
-                    .replace(/^(<br>)+/, '');
-                recContainer.innerHTML = formattedText;
-            }
+                batchTimer.innerText = `Processing bulk analysis... Elapsed: ${formattedElapsed} | Est. remaining: ${formattedRemaining}`;
+                
+                if (secondsElapsed > estimatedSeconds * 0.3) {
+                    document.getElementById('batch-step-1').style.opacity = '0.5';
+                    document.getElementById('batch-step-2').classList.add('active');
+                    document.getElementById('batch-step-2').style.opacity = '1';
+                }
+                if (secondsElapsed > estimatedSeconds * 0.7) {
+                    document.getElementById('batch-step-2').style.opacity = '0.5';
+                    document.getElementById('batch-step-3').classList.add('active');
+                    document.getElementById('batch-step-3').style.opacity = '1';
+                }
+            }, 1000);
 
-            document.getElementById("defanged-url-display").innerText = data.defanged_url;
+            batchAbortController = new AbortController();
 
-            document.getElementById("copy-defanged-btn").onclick = () => {
-                navigator.clipboard.writeText(data.defanged_url);
-                alert(`Copied defanged URL to clipboard:\n${data.defanged_url}`);
-            };
+            try {
+                const resp = await fetch("/batch_analyze", {
+                    method: "POST",
+                    body: formData,
+                    signal: batchAbortController.signal
+                });
 
-            document.getElementById("export-json-btn").onclick = () => {
-                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-                const urlObj = URL.createObjectURL(blob);
+                clearInterval(batchTimerInterval);
+
+                if (!resp.ok) {
+                    const errData = await resp.json();
+                    alert(errData.error || "Batch processing failed.");
+                    return;
+                }
+
+                const blob = await resp.blob();
+                const urlObj = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = urlObj;
-                a.download = `scan_report_${data.scan_id}.json`;
+                a.download = `threatlink_batch_report_${Date.now()}.csv`;
+                document.body.appendChild(a);
                 a.click();
-            };
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(urlObj);
 
-        } catch (err) { 
-            console.error(err);
-            loaderBox.classList.add("hidden");
-            alert("Analysis failed to complete. Check console logs."); 
-        } finally { 
-            analyzeBtn.disabled = false; 
-            btnText.classList.remove("hidden"); 
-            spinner.classList.add("hidden"); 
-            clearInterval(scanInterval);
-            laserScanner.style.opacity = "0";
-            laserScanner.style.transform = "translateY(-10px)";
+                showToast('📥 Batch threat report downloaded successfully!');
+                setTimeout(() => location.reload(), 2000);
+
+            } catch (err) {
+                clearInterval(batchTimerInterval);
+                if (err.name === 'AbortError') {
+                    console.log("Batch request aborted by user.");
+                } else {
+                    console.error("Batch upload error:", err);
+                    alert("An error occurred while connecting to the server for batch processing.");
+                }
+            } finally {
+                batchBtn.disabled = false;
+                batchBtnText.innerText = "Process Batch Threat Report";
+                batchSpinner.classList.add("hidden");
+                batchLoaderBox.classList.add("hidden");
+                batchCancelBtn.classList.add("hidden");
+                batchAbortController = null;
+            }
         }
-    };
 
-    async function sendFeedback(type) {
-        if (!activeScanUuid) { alert("Please perform a scan first."); return; }
-        const resp = await fetch("/feedback", {
-            method: "POST",
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ scan_uuid: activeScanUuid, url: currentScannedUrl, feedback_type: type })
-        });
-        const res = await resp.json();
-        if (res.success) alert("Thank you! Feedback successfully logged for model evaluation and retraining.");
-        else alert("Failed to log feedback.");
-    }
+        const analyzeForm = document.getElementById("analyze-form");
+        const urlInput = document.getElementById("url-input");
+        const analyzeBtn = document.getElementById("analyze-btn");
+        const btnText = document.getElementById("btn-text");
+        const spinner = document.getElementById("spinner");
+        const laserScanner = document.getElementById("laser-scanner");
+        const loaderBox = document.getElementById("loader-box");
 
-    document.getElementById("report-phish-btn").onclick = () => sendFeedback("phishing_report");
-    document.getElementById("wrong-result-btn").onclick = () => sendFeedback("false_positive");
+        let activeScanUuid = null;
+        let currentScannedUrl = null;
+
+        function categoryToClass(category) {
+            const c = (category || "").toLowerCase().trim();
+            if (c === "safe" || c === "low risk") return "low-risk";
+            if (c === "suspicious") return "medium-risk";
+            if (c === "malicious" || c === "high risk") return "high-risk";
+            return "medium-risk"; 
+        }
+
+        analyzeForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const url = urlInput.value.trim();
+            currentScannedUrl = url;
+
+            analyzeBtn.disabled = true;
+            btnText.classList.add("hidden");
+            spinner.classList.remove("hidden");
+            loaderBox.classList.remove("hidden");
+            
+            const steps = [document.getElementById("step-1"), document.getElementById("step-2"), document.getElementById("step-3"), document.getElementById("step-4")];
+            steps.forEach(s => s.classList.remove("active"));
+            
+            let stepIdx = 0;
+            steps[stepIdx].classList.add("active");
+            const stepInterval = setInterval(() => {
+                stepIdx++;
+                if(stepIdx < steps.length) {
+                    steps.forEach(s => s.classList.remove("active"));
+                    steps[stepIdx].classList.add("active");
+                }
+            }, 400);
+
+            laserScanner.style.opacity = "1";
+            let moveDown = true;
+            let scanInterval = setInterval(() => {
+                laserScanner.style.transform = moveDown ? "translateY(70px)" : "translateY(-10px)";
+                moveDown = !moveDown;
+            }, 1500);
+
+            try {
+                const formData = new FormData();
+                formData.append("url", url);
+                const resp = await fetch("/analyze", { method: "POST", body: formData });
+                const data = await resp.json();
+
+                clearInterval(stepInterval);
+                loaderBox.classList.add("hidden");
+
+                if (data.error) { alert(data.error); return; }
+
+                playSciFiBeep(data.risk_score > 70 ? 'alert' : 'success');
+                activeScanUuid = data.scan_id;
+                document.getElementById("result-card").classList.remove("hidden");
+
+                document.getElementById("meta-scan-id").innerText = data.scan_id;
+                document.getElementById("meta-timestamp").innerText = data.timestamp;
+
+                if (data.total_scans !== undefined) document.getElementById("sidebar-total-scans").innerText = data.total_scans;
+                if (data.threats_detected !== undefined) document.getElementById("sidebar-threats-detected").innerText = data.threats_detected;
+
+                document.getElementById("risk-score").innerText = `SCORE: ${parseFloat(data.risk_score).toFixed(2)}/100`;
+                document.getElementById("risk-bar").style.width = data.risk_score + "%";
+                document.getElementById("risk-bar").style.background = data.risk_score > 70 ? "#ff003c" : data.risk_score > 30 ? "#ffaa00" : "#00ff66";
+                document.getElementById("risk-category").innerText = data.risk_category;
+                document.getElementById("risk-category").className = "risk-label " + categoryToClass(data.risk_category);
+
+                if (data.score_breakdown) {
+                    document.getElementById("breakdown-intel").innerText = data.score_breakdown.threat_intel_match;
+                    document.getElementById("breakdown-override").innerText = data.score_breakdown.safety_override;
+                }
+
+                const chainBox = document.getElementById("redirect-chain-box");
+                if (data.redirect_chain && data.redirect_chain.length > 0) {
+                    chainBox.innerHTML = data.redirect_chain.map((hop, idx) => `<div>Hop ${idx + 1}: <span style="color: var(--neon, #00f3ff);">${hop}</span></div>`).join('');
+                } else {
+                    chainBox.innerText = "Direct connection (No redirects/shorteners detected)";
+                }
+
+                if (data.anatomy) {
+                    document.getElementById("anatomy-protocol").innerText = data.anatomy.protocol;
+                    document.getElementById("anatomy-domain").innerText = data.anatomy.domain;
+                    document.getElementById("anatomy-path").innerText = data.anatomy.path;
+                    document.getElementById("anatomy-age").innerText = data.anatomy.domain_age || "N/A";
+                    document.getElementById("anatomy-flags").innerText = data.anatomy.flags.join(', ');
+                }
+
+                const explContainer = document.getElementById("ml-explainability-container");
+                explContainer.innerHTML = "";
+                if (data.top_features && data.top_features.length > 0) {
+                    explContainer.innerHTML = `
+                        <table class="ml-telemetry-table">
+                            <thead>
+                                <tr>
+                                    <th>Feature Metric</th>
+                                    <th style="width: 120px;">Impact Weight</th>
+                                    <th style="width: 35%;">Distribution</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.top_features.map(f => `
+                                    <tr>
+                                        <td>${f.feature}</td>
+                                        <td style="font-family: inherit; color: var(--neon, #00f3ff); font-weight: 700;">${f.impact}%</td>
+                                        <td>
+                                            <div class="feature-bar-bg">
+                                                <div class="feature-bar-fill" style="width: ${f.impact}%;"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                const aiBriefingEl = document.getElementById("ai-briefing-text");
+                aiBriefingEl.innerHTML = '<span style="opacity: 0.6; font-style: italic;">Synthesizing AI Threat Intelligence Briefing...</span>';
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+                fetch('/api/ai_briefing', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        url: data.url,
+                        risk_score: data.risk_score,
+                        risk_category: data.risk_category,
+                        domain_age: data.anatomy ? data.anatomy.domain_age : 'Unknown',
+                        flags: data.anatomy ? data.anatomy.flags : [],
+                        intel_sources: data.intel_results ? data.intel_results.map(i => ({source: i.source, verdict: i.verdict})) : []
+                    }),
+                    signal: controller.signal
+                })
+                .then(res => {
+                    clearTimeout(timeoutId);
+                    return res.json();
+                })
+                .then(aiData => {
+                    let rawBriefing = aiData.ai_briefing || "No AI briefing generated.";
+                    let formattedBriefing = rawBriefing.replace(
+                        "Actionable Insight:", 
+                        "<br><br><strong>Actionable Insight:</strong>"
+                    );
+                    aiBriefingEl.innerHTML = formattedBriefing;
+                })
+                .catch(err => {
+                    clearTimeout(timeoutId);
+                    if (err.name === 'AbortError') {
+                        aiBriefingEl.innerText = "AI briefing timed out due to high Google server demand. Your core scan results are unaffected.";
+                    } else {
+                        aiBriefingEl.innerText = "AI briefing temporarily unavailable.";
+                    }
+                });
+
+                const grid = document.getElementById("intel-grid");
+                grid.innerHTML = ""; 
+                if (data.intel_results && Array.isArray(data.intel_results) && data.intel_results.length > 0) {
+                    grid.innerHTML = data.intel_results.map(intel => {
+                        const verdictClass = (intel.verdict || "neutral").toLowerCase();
+                        return `
+                        <div class="intel-card ${verdictClass}">
+                            <div class="intel-header">
+                                <strong>${intel.source || 'Unknown'}</strong>
+                                <span class="badge">${intel.verdict ? intel.verdict.toUpperCase() : 'N/A'}</span>
+                            </div>
+                            <p class="intel-detail">${intel.detail || 'No details provided.'}</p>
+                        </div>
+                    `}).join('');
+                }
+
+                const reasonList = document.getElementById("reason-list");
+                const findingsArray = data.findings || [];
+                if (findingsArray.length > 0) {
+                    reasonList.innerHTML = findingsArray.map(r => {
+                        const isThreat = r.toLowerCase().includes('malicious') || r.toLowerCase().includes('match') || r.toLowerCase().includes('high risk') || r.toLowerCase().includes('newly registered');
+                        const cssClass = isThreat ? "finding-high" : "finding-safe";
+                        return `<div class="${cssClass}">• ${r}</div>`;
+                    }).join('');
+                }
+
+                const recContainer = document.getElementById("recommendation-text");
+                const recData = data.recommendations || "";
+                if (Array.isArray(recData)) {
+                    recContainer.innerHTML = recData.map(r => `<div style="margin-bottom: 8px;">• ${r}</div>`).join('');
+                } else {
+                    let formattedText = recData
+                        .replace(/(Immediate Action:|Verification:|Reporting:|Action:)/g, '<br><strong style="color: var(--neon, #00f3ff);">$1</strong>')
+                        .replace(/^(<br>)+/, '');
+                    recContainer.innerHTML = formattedText;
+                }
+
+                document.getElementById("defanged-url-display").innerText = data.defanged_url;
+
+                document.getElementById("copy-defanged-btn").onclick = () => {
+                    navigator.clipboard.writeText(data.defanged_url);
+                    showToast("📋 Copied defanged URL to clipboard!");
+                };
+
+                document.getElementById("export-json-btn").onclick = () => {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                    const urlObj = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = urlObj;
+                    a.download = `scan_report_${data.scan_id}.json`;
+                    a.click();
+                    showToast("📥 Scan report JSON downloaded successfully.");
+                };
+
+            } catch (err) { 
+                console.error(err);
+                loaderBox.classList.add("hidden");
+                alert("Analysis failed to complete. Check console logs."); 
+            } finally { 
+                analyzeBtn.disabled = false; 
+                btnText.classList.remove("hidden"); 
+                spinner.classList.add("hidden"); 
+                clearInterval(scanInterval);
+                laserScanner.style.opacity = "0";
+                laserScanner.style.transform = "translateY(-10px)";
+            }
+        };
+
+        async function sendFeedback(type) {
+            if (!activeScanUuid) { alert("Please perform a scan first."); return; }
+            const resp = await fetch("/feedback", {
+                method: "POST",
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ scan_uuid: activeScanUuid, url: currentScannedUrl, feedback_type: type })
+            });
+            const res = await resp.json();
+            if (res.success) {
+                showToast("Thank you! Feedback logged successfully.");
+            } else {
+                alert("Failed to log feedback.");
+            }
+        }
+
+        document.getElementById("report-phish-btn").onclick = () => sendFeedback("phishing_report");
+        document.getElementById("wrong-result-btn").onclick = () => sendFeedback("false_positive");
     </script>
 {% endblock %}

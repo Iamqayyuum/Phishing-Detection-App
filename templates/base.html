@@ -6,61 +6,163 @@
     <title>Phishing URL Risk Analyzer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        /* Custom Navbar Button Colors */
-        .nav-btn-history {
-            border-color: #ffaa00 !important;
-            color: #ffaa00 !important;
-            background: rgba(255, 170, 0, 0.1);
-            transition: all 0.3s ease;
+        /* Live Threat Ticker Bar in Navbar */
+        .threat-ticker {
+            flex-grow: 1;
+            margin: 0 20px;
+            background: rgba(255, 0, 60, 0.15);
+            border: 1px solid rgba(255, 0, 60, 0.3);
+            border-radius: 4px;
+            color: #ff003c;
+            font-family: monospace;
+            font-size: 0.8em;
+            padding: 5px 10px;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
         }
-        .nav-btn-history:hover {
-            background: rgba(255, 170, 0, 0.25);
-            box-shadow: 0 0 10px rgba(255, 170, 0, 0.4);
+        .ticker-track {
+            display: inline-block;
+            animation: marquee 25s linear infinite;
+        }
+        .ticker-track span {
+            margin-right: 40px;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
         }
 
-        .nav-btn-logout {
-            border-color: #ff003c !important;
-            color: #ff003c !important;
-            background: rgba(255, 0, 60, 0.1);
-            transition: all 0.3s ease;
+        /* 🛡️ Explicit Cyberpunk Toast Notification Styling */
+        #toast-notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(10, 25, 47, 0.95);
+            border: 1px solid #00f3ff;
+            color: #00f3ff;
+            padding: 14px 22px;
+            border-radius: 6px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+            font-family: inherit;
+            font-size: 0.95em;
+            z-index: 99999;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
         }
-        .nav-btn-logout:hover {
-            background: rgba(255, 0, 60, 0.25);
-            box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);
+        #toast-notification.show {
+            opacity: 1;
+            transform: translateY(0);
         }
+
+        /* Navbar Custom Buttons */
+        .nav-btn-history { border-color: #ffaa00 !important; color: #ffaa00 !important; background: rgba(255, 170, 0, 0.1); }
+        .nav-btn-logout { border-color: #ff003c !important; color: #ff003c !important; background: rgba(255, 0, 60, 0.1); }
     </style>
 </head>
 <body>
-    <nav class="navbar">
+    <nav class="navbar" style="display: flex; align-items: center; justify-content: space-between;">
         {% if current_user.is_authenticated or session.get('is_admin') %}
-            <div class="user-profile">
+            <div class="user-profile" style="flex-shrink: 0;">
                 <div class="avatar">{{ (current_user.username if current_user.is_authenticated else 'Admin')[0]|upper }}</div>
                 <span class="greeting">Hello, <strong>{{ current_user.username if current_user.is_authenticated else 'Admin' }}</strong></span>
             </div>
             
-            <!-- Hide Scanner, History, and About when viewing as Admin -->
-            {% if not session.get('is_admin') and not (current_user.is_authenticated and current_user.is_admin) %}
-                <!-- Only show Scanner button if NOT currently on the home page -->
+            <!-- Live Threat Ticker in the Middle of Navbar -->
+            <div class="threat-ticker">
+                <div class="ticker-track">
+                    <span>[ALERT] Phishing attempt blocked on hxxps://secure-login-apple[.]com - Risk Score: 92/100</span>
+                    <span>[DEFENSE] Zero-day credential harvest intercepted on hxxps://update-microsoft-support[.]net - Risk Score: 88/100</span>
+                    <span>[WARNING] Malicious IP routing flagged on 185[.]220[.]101[.]5 - Risk Score: 95/100</span>
+                    <span>[SECURE] OpenPhish global intelligence feed synchronized. All nodes nominal.</span>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                {% if not session.get('is_admin') and not (current_user.is_authenticated and current_user.is_admin) %}
+                    {% if request.endpoint != 'home' %}
+                        <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
+                    {% endif %}
+                    <a href="{{ url_for('history') }}" class="btn-outline nav-btn-history">History</a>
+                    <a href="{{ url_for('about') }}" class="btn-outline">About</a>   
+                {% endif %}
+
+                <a href="{{ url_for('admin_logout' if session.get('is_admin') else 'logout') }}" class="btn-outline nav-btn-logout">Logout</a>
+            </div>
+        {% else %}
+            <div class="user-profile" style="flex-shrink: 0;">
+                <span class="greeting" style="color: var(--neon, #00f3ff); font-weight: 700;">THREATLINK SOC</span>
+            </div>
+
+            <!-- Live Threat Ticker in the Middle of Navbar -->
+            <div class="threat-ticker">
+                <div class="ticker-track">
+                    <span>[ALERT] Phishing attempt blocked on hxxps://secure-login-apple[.]com - Risk Score: 92/100</span>
+                    <span>[DEFENSE] Zero-day credential harvest intercepted on hxxps://update-microsoft-support[.]net - Risk Score: 88/100</span>
+                    <span>[WARNING] Malicious IP routing flagged on 185[.]220[.]101[.]5 - Risk Score: 95/100</span>
+                    <span>[SECURE] OpenPhish global intelligence feed synchronized. All nodes nominal.</span>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                {% if request.endpoint != 'login' %}
+                    <a href="{{ url_for('login') }}" class="btn-outline">Login</a>
+                {% endif %}
                 {% if request.endpoint != 'home' %}
                     <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
                 {% endif %}
-                <a href="{{ url_for('history') }}" class="btn-outline nav-btn-history">History</a>
-                <a href="{{ url_for('about') }}" class="btn-outline">About</a>   
-            {% endif %}
-
-            <a href="{{ url_for('admin_logout' if session.get('is_admin') else 'logout') }}" class="btn-outline nav-btn-logout">Logout</a>
-        {% else %}
-            <a href="{{ url_for('login') }}" class="btn-outline">Login</a>
-            {% if request.endpoint != 'home' %}
-                <a href="{{ url_for('home') }}" class="btn-outline">Scanner</a>
-            {% endif %}
-            <a href="{{ url_for('about') }}" class="btn-outline">About</a>       
+                <a href="{{ url_for('about') }}" class="btn-outline">About</a>       
+            </div>
         {% endif %}
     </nav>
+
+    <!-- Global Copy Toast -->
+    <div id="toast-notification">📋 Copied Defanged URL to Clipboard!</div>
 
     <div class="container">
         {% block content %}
         {% endblock %}
     </div>
+
+    <!-- Web Audio API Sound Effects & Toast Script -->
+    <script>
+        let audioEnabled = true;
+
+        function playSciFiBeep(type = 'success') {
+            if (!audioEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = type === 'alert' ? 'sawtooth' : 'sine';
+                osc.frequency.setValueAtTime(type === 'alert' ? 220 : 880, ctx.currentTime);
+                if (type === 'success') {
+                    osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.15);
+                }
+
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start();
+                osc.stop(ctx.currentTime + 0.2);
+            } catch(e) { console.error(e); }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast-notification');
+            if (!toast) return;
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>

@@ -508,6 +508,76 @@ def api_ai_briefing():
     briefing = generate_ai_threat_briefing(url, risk_score, risk_category, anatomy, intel_results)
     return jsonify({"ai_briefing": briefing})
 
+@app.route('/batch_analyze', methods=['POST'])
+def batch_analyze():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part uploaded."}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file."}), 400
+    
+    if file and file.filename.endswith('.csv'):
+        try:
+            stream = StringIO(file.stream.read().decode("UTF-8"))
+            reader = csv.reader(stream)
+            
+            si = StringIO()
+            writer = csv.writer(si)
+            writer.writerow(['Scan UUID', 'Timestamp', 'Target URL', 'Risk Score', 'Status'])
+
+            for row in reader:
+                if not row: 
+                    continue
+                raw_url = row[0].strip()
+                if not raw_url or raw_url.lower() == 'url' or raw_url.lower() == 'target url':
+                    continue # Skip header row if present
+                
+                if not raw_url.startswith("http://") and not raw_url.startswith("https://"):
+                    raw_url = "https://" + raw_url
+
+                target_url = expand_short_url(normalize_url(raw_url))
+                scan_uuid = str(uuid.uuid4())
+                timestamp_str = datetime.now(MY_TIMEZONE).strftime('%Y-%m-%d %H:%M:%S')
+
+                # Evaluate risk
+                try:
+                    features = extract_features(target_url)
+                    features["raw_url"] = target_url
+                    df = pd.DataFrame([features])
+                    ml_probability = float(model_pipeline.predict_proba(df)[0][1]) if model_pipeline else 0.5
+                    intel_results = query_threat_intelligence(target_url)
+                    result = compute_final_risk(features, intel_results, ml_probability)
+                    
+                    risk_score = result.get("risk_score", ml_probability * 100)
+                    status = result.get("risk_category", "Unknown")
+                except Exception:
+                    risk_score = 50.0
+                    status = "Suspicious"
+
+                # Save to ScanHistory if user is logged in
+                new_scan = ScanHistory(
+                    scan_uuid=scan_uuid, url_scanned=target_url, risk_score=risk_score, 
+                    status=status, user_id=current_user.id if current_user.is_authenticated else None,
+                    timestamp=timestamp_str
+                )
+                db.session.add(new_scan)
+                writer.writerow([scan_uuid[:8].upper(), timestamp_str, target_url, round(risk_score, 1), status])
+
+            db.session.commit()
+            
+            output = si.getvalue()
+            return Response(
+                output,
+                mimetype="text/csv",
+                headers={"Content-Disposition": "attachment; filename=threatlink_batch_threat_report.csv"}
+            )
+        except Exception as e:
+            logging.error(f"Batch processing error: {str(e)}")
+            return jsonify({"error": f"Failed to process CSV batch: {str(e)}"}), 500
+
+    return jsonify({"error": "Invalid file format. Please upload a .csv file."}), 400
+
 @app.route("/analyze", methods=["POST"])
 @limiter.limit("5 per minute") 
 def analyze():
